@@ -12,6 +12,7 @@
 
   <modules>
     <module>rook-core</module>
+    <module>rook-db</module>
   </modules>
 
   <properties>
@@ -41,6 +42,11 @@
       <dependency>
         <groupId>dev.rook</groupId>
         <artifactId>rook-core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.rook</groupId>
+        <artifactId>rook-db</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>
@@ -119,6 +125,10 @@
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-enforcer-plugin</artifactId>
