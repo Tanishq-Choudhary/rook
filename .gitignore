@@ -17,3 +17,4 @@ dashboard/next-env.d.ts
 eval/work/
 .DS_Store
 Thumbs.db
+.jqwik-database
