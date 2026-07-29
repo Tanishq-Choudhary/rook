@@ -1,0 +1,55 @@
+package dev.rook.core.change;
+
+public enum ChangeKind {
+    OPERATION_REMOVED(Severity.BREAKING),
+    OPERATION_DEPRECATED(Severity.DEPRECATION),
+    OPERATION_ADDED(Severity.ADDITIVE),
+    PARAMETER_REMOVED(Severity.BREAKING),
+    PARAMETER_REQUIRED_ADDED(Severity.BREAKING),
+    PARAMETER_MADE_REQUIRED(Severity.BREAKING),
+    PARAMETER_TYPE_CHANGED(Severity.BREAKING),
+    PARAMETER_OPTIONAL_ADDED(Severity.ADDITIVE),
+    REQUEST_FIELD_REMOVED(Severity.BREAKING),
+    REQUEST_FIELD_REQUIRED_ADDED(Severity.BREAKING),
+    REQUEST_FIELD_MADE_REQUIRED(Severity.BREAKING),
+    REQUEST_FIELD_TYPE_CHANGED(Severity.BREAKING),
+    REQUEST_FIELD_OPTIONAL_ADDED(Severity.ADDITIVE),
+    RESPONSE_FIELD_REMOVED(Severity.BREAKING),
+    RESPONSE_FIELD_TYPE_CHANGED(Severity.BREAKING),
+    RESPONSE_FIELD_MADE_OPTIONAL(Severity.BREAKING),
+    RESPONSE_FIELD_ADDED(Severity.ADDITIVE),
+    FIELD_RENAMED(Severity.BREAKING),
+    FIELD_DEPRECATED(Severity.DEPRECATION),
+    ENUM_VALUE_REMOVED(Severity.BREAKING),
+    ENUM_VALUE_ADDED(Severity.ADDITIVE),
+    RESPONSE_STATUS_REMOVED(Severity.BREAKING),
+    CLASS_REMOVED(Severity.BREAKING),
+    CLASS_MOVED(Severity.BREAKING),
+    CLASS_DEPRECATED(Severity.DEPRECATION),
+    CLASS_VISIBILITY_REDUCED(Severity.BREAKING),
+    METHOD_REMOVED(Severity.BREAKING),
+    METHOD_RENAMED(Severity.BREAKING),
+    METHOD_PARAMETERS_CHANGED(Severity.BREAKING),
+    METHOD_RETURN_TYPE_CHANGED(Severity.BREAKING),
+    METHOD_DEPRECATED(Severity.DEPRECATION),
+    METHOD_ADDED(Severity.ADDITIVE),
+    JAVA_FIELD_REMOVED(Severity.BREAKING),
+    JAVA_FIELD_TYPE_CHANGED(Severity.BREAKING),
+    ADVISORY_BREAKING(Severity.BREAKING),
+    ADVISORY_DEPRECATION(Severity.DEPRECATION),
+    ADVISORY_NOTE(Severity.ADVISORY);
+
+    private final Severity defaultSeverity;
+
+    ChangeKind(Severity defaultSeverity) {
+        this.defaultSeverity = defaultSeverity;
+    }
+
+    public Severity defaultSeverity() {
+        return defaultSeverity;
+    }
+
+    public boolean isAdvisory() {
+        return name().startsWith("ADVISORY_");
+    }
+}

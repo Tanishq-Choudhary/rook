@@ -2,6 +2,7 @@ package dev.rook.core.hash;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import net.jqwik.api.Assume;
 import net.jqwik.api.ForAll;
 import net.jqwik.api.Property;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ class HashesTest {
 
     @Property
     void partsHashDiffersWhenAPartChanges(@ForAll String a, @ForAll String b, @ForAll String c) {
-        net.jqwik.api.Assume.that(!b.equals(c));
+        Assume.that(!b.equals(c));
         assertThat(Hashes.sha256Hex(a, b)).isNotEqualTo(Hashes.sha256Hex(a, c));
     }
 }
