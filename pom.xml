@@ -13,6 +13,7 @@
   <modules>
     <module>rook-core</module>
     <module>rook-db</module>
+    <module>rook-server</module>
   </modules>
 
   <properties>

@@ -1,0 +1,6 @@
+logging:
+  structured:
+    format:
+      console:
+  level:
+    dev.rook: debug
