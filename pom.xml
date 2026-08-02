@@ -13,6 +13,7 @@
   <modules>
     <module>rook-core</module>
     <module>rook-db</module>
+    <module>rook-testkit</module>
     <module>rook-server</module>
   </modules>
 
@@ -48,6 +49,11 @@
       <dependency>
         <groupId>dev.rook</groupId>
         <artifactId>rook-db</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.rook</groupId>
+        <artifactId>rook-testkit</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>
