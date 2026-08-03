@@ -25,6 +25,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>4.1.1</spring-boot.version>
     <jqwik.version>1.10.2</jqwik.version>
+    <asm.version>9.11</asm.version>
     <jacoco.line.minimum>0.70</jacoco.line.minimum>
   </properties>
 
@@ -41,6 +42,11 @@
         <groupId>net.jqwik</groupId>
         <artifactId>jqwik</artifactId>
         <version>${jqwik.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ow2.asm</groupId>
+        <artifactId>asm</artifactId>
+        <version>${asm.version}</version>
       </dependency>
       <dependency>
         <groupId>dev.rook</groupId>

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 public final class RenameMatcher {
 
@@ -21,13 +22,22 @@ public final class RenameMatcher {
             List<String> added,
             Map<String, String> removedTypes,
             Map<String, String> addedTypes) {
+        return match(removed, added, removedTypes, addedTypes, Similarity::names);
+    }
+
+    public static List<Rename> match(
+            List<String> removed,
+            List<String> added,
+            Map<String, String> removedTypes,
+            Map<String, String> addedTypes,
+            BiFunction<String, String, Double> scorer) {
         List<Rename> candidates = new ArrayList<>();
         for (String from : removed) {
             for (String to : added) {
                 if (!removedTypes.get(from).equals(addedTypes.get(to))) {
                     continue;
                 }
-                double score = Similarity.names(from, to);
+                double score = scorer.apply(from, to);
                 if (score >= NAME_THRESHOLD) {
                     candidates.add(new Rename(from, to, round(score)));
                 }

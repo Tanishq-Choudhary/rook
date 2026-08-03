@@ -18,6 +18,8 @@ public final class Attr {
     public static final String OWNER = "owner";
     public static final String OLD_PARAMETERS = "oldParameters";
     public static final String NEW_PARAMETERS = "newParameters";
+    public static final String FOR_REMOVAL = "forRemoval";
+    public static final String ENUM_CONSTANT = "enumConstant";
 
     private Attr() {}
 }
