@@ -1,0 +1,228 @@
+openapi: 3.0.3
+info:
+  title: Acme Payments
+  version: 2.0.0
+paths:
+  /v1/charges:
+    post:
+      operationId: createCharge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChargeRequest'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charge'
+        '400':
+          description: invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      operationId: listCharges
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+        - name: cursor
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChargeList'
+  /v1/payments/{id}:
+    get:
+      operationId: getCharge
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charge'
+        '404':
+          description: missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/customers:
+    post:
+      operationId: createCustomer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+  /v1/refunds:
+    post:
+      operationId: createRefund
+      deprecated: true
+      x-sunset: 2027-03-01
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRefundRequest'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Refund'
+  /v1/payouts:
+    post:
+      operationId: createPayout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePayoutRequest'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payout'
+components:
+  schemas:
+    Charge:
+      type: object
+      required: [id, amount, currency, status]
+      properties:
+        id:
+          type: string
+        amount:
+          type: integer
+        currency:
+          type: string
+          enum: [usd, eur, gbp]
+        status:
+          type: string
+          enum: [pending, succeeded, declined, refunded]
+        customer:
+          type: string
+        description:
+          type: string
+        created:
+          type: string
+          format: date-time
+        receipt_url:
+          type: string
+    CreateChargeRequest:
+      type: object
+      required: [amount, currency, idempotency_key, source]
+      properties:
+        amount:
+          type: integer
+        currency:
+          type: string
+          enum: [usd, eur]
+        customer_id:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+        idempotency_key:
+          type: string
+    ChargeList:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Charge'
+        has_more:
+          type: boolean
+    Customer:
+      type: object
+      required: [id, email]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+    CreateCustomerRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+    Refund:
+      type: object
+      required: [id, charge_id, amount]
+      properties:
+        id:
+          type: string
+        charge_id:
+          type: string
+        amount:
+          type: integer
+        status:
+          type: string
+    CreateRefundRequest:
+      type: object
+      required: [charge_id]
+      properties:
+        charge_id:
+          type: string
+        amount:
+          type: integer
+    CreatePayoutRequest:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: integer
+    Payout:
+      type: object
+      properties:
+        id:
+          type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
