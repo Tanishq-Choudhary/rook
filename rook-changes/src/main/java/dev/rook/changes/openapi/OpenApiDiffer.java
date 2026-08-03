@@ -32,6 +32,7 @@ public final class OpenApiDiffer {
             OpenApiDocument after) {
         DiffContext ctx = new DiffContext(sourceId, fromVersion, toVersion);
         List<ChangeEvent> all = new ArrayList<>(OperationDiff.run(ctx, before, after));
+        all.addAll(SchemaDiff.run(ctx, before, after));
         Map<String, ChangeEvent> unique = new LinkedHashMap<>();
         for (ChangeEvent event : all) {
             unique.putIfAbsent(event.fingerprint(), event);
