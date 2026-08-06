@@ -38,6 +38,9 @@ public final class ChangelogClassifier {
     private static final Pattern USE_INSTEAD =
             Pattern.compile(
                     "(?i)(?:use|prefer|switch to|migrate to)\\s+`([^`]+)`\\s+instead(?:\\s+of\\s+`([^`]+)`)?");
+    private static final Pattern REPLACED =
+            Pattern.compile(
+                    "(?i)`([^`]+)`\\s+(?:has been |was |is |got )?replaced\\s+(?:by|with)\\s+`([^`]+)`");
     private static final Pattern FAVOUR =
             Pattern.compile(
                     "(?i)`([^`]+)`\\s+(?:is |has been |was |are )?(?:now )?(?:deprecated|removed)[^`]*?(?:in favou?r of|replaced by|use|see)\\s+`([^`]+)`");
@@ -105,11 +108,16 @@ public final class ChangelogClassifier {
         String replacement = null;
         Matcher renamed = RENAMED.matcher(line);
         Matcher arrow = ARROW.matcher(line);
+        Matcher replaced = REPLACED.matcher(line);
         Matcher favour = FAVOUR.matcher(line);
         Matcher instead = USE_INSTEAD.matcher(line);
         if (renamed.find()) {
             from = renamed.group(1);
             replacement = renamed.group(2);
+            category = Category.RENAME;
+        } else if (replaced.find()) {
+            from = replaced.group(1);
+            replacement = replaced.group(2);
             category = Category.RENAME;
         } else if (favour.find()) {
             from = favour.group(1);
@@ -129,7 +137,8 @@ public final class ChangelogClassifier {
 
     private static Category categoryFromText(String text) {
         String lower = text.toLowerCase(Locale.ROOT);
-        if (lower.contains("renamed")) {
+        if (lower.contains("renamed")
+                || lower.matches(".*`\\s+(has been |was |is )?replaced (by|with) `.*")) {
             return Category.RENAME;
         }
         if (lower.contains("deprecat")) {

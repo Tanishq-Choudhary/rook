@@ -131,4 +131,15 @@ class ChangelogClassifierTest {
                 .isEmpty();
         assertThat(ChangelogClassifier.classify("")).isEmpty();
     }
+
+    @Test
+    void replacedByLinesUnderAPlainHeadingAreRenames() {
+        List<Finding> findings =
+                ChangelogClassifier.classify(
+                        "### Changed\n- `Client.close` has been replaced by `Client.shutdown`\n");
+        assertThat(findings).hasSize(1);
+        assertThat(findings.get(0).category()).isEqualTo(Category.RENAME);
+        assertThat(findings.get(0).from()).isEqualTo("Client.close");
+        assertThat(findings.get(0).replacement()).isEqualTo("Client.shutdown");
+    }
 }

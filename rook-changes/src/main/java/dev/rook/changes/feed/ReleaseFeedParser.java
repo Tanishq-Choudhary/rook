@@ -1,9 +1,8 @@
 package dev.rook.changes.feed;
 
+import dev.rook.changes.xml.SafeXml;
 import dev.rook.core.error.RookException;
 import dev.rook.core.json.Json;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -15,12 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import tools.jackson.databind.JsonNode;
 
@@ -57,22 +52,41 @@ public final class ReleaseFeedParser {
         return entries;
     }
 
+    public static ReleaseEntry parseGitHubRelease(String json) {
+        JsonNode node = Json.tree(json);
+        String tag = node.path("tag_name").asString("");
+        if (tag.isBlank()) {
+            throw RookException.invalid("release has no tag");
+        }
+        return new ReleaseEntry(
+                ReleaseEntry.normalizeVersion(tag),
+                node.path("name").asString(tag),
+                instant(node.path("published_at").asString("")),
+                node.path("body").asString(""),
+                node.path("html_url").asString(""),
+                node.path("prerelease").asBoolean(false));
+    }
+
     public static List<ReleaseEntry> parseAtomOrRss(String xml) {
-        Document document = parseXml(xml);
+        Document document = SafeXml.parse(xml);
         List<ReleaseEntry> entries = new ArrayList<>();
         NodeList atom = document.getElementsByTagNameNS("*", "entry");
         for (int i = 0; i < atom.getLength(); i++) {
             Element entry = (Element) atom.item(i);
-            String title = text(entry, "title");
+            String title = SafeXml.childText(entry, "title");
             String link = atomLink(entry);
-            String body = firstNonBlank(text(entry, "content"), text(entry, "summary"));
+            String body =
+                    firstNonBlank(
+                            SafeXml.childText(entry, "content"),
+                            SafeXml.childText(entry, "summary"));
             entries.add(
                     new ReleaseEntry(
                             ReleaseEntry.normalizeVersion(versionFromTitle(title, link)),
                             title,
                             instant(
                                     firstNonBlank(
-                                            text(entry, "updated"), text(entry, "published"))),
+                                            SafeXml.childText(entry, "updated"),
+                                            SafeXml.childText(entry, "published"))),
                             body,
                             link,
                             false));
@@ -80,14 +94,14 @@ public final class ReleaseFeedParser {
         NodeList rss = document.getElementsByTagName("item");
         for (int i = 0; i < rss.getLength(); i++) {
             Element item = (Element) rss.item(i);
-            String title = text(item, "title");
-            String link = text(item, "link");
+            String title = SafeXml.childText(item, "title");
+            String link = SafeXml.childText(item, "link");
             entries.add(
                     new ReleaseEntry(
                             ReleaseEntry.normalizeVersion(versionFromTitle(title, link)),
                             title,
-                            rfc1123(text(item, "pubDate")),
-                            text(item, "description"),
+                            rfc1123(SafeXml.childText(item, "pubDate")),
+                            SafeXml.childText(item, "description"),
                             link,
                             false));
         }
@@ -128,35 +142,6 @@ public final class ReleaseFeedParser {
             }
         }
         return new ReleaseEntry(version, version, published, body.toString().strip(), "", false);
-    }
-
-    private static Document parseXml(String xml) {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setXIncludeAware(false);
-            factory.setExpandEntityReferences(false);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            return builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            throw RookException.invalid("feed is not valid xml", e);
-        }
-    }
-
-    private static String text(Element parent, String name) {
-        NodeList nodes = parent.getElementsByTagNameNS("*", name);
-        if (nodes.getLength() == 0) {
-            nodes = parent.getElementsByTagName(name);
-        }
-        for (int i = 0; i < nodes.getLength(); i++) {
-            Node node = nodes.item(i);
-            if (node.getParentNode() == parent) {
-                return node.getTextContent().strip();
-            }
-        }
-        return "";
     }
 
     private static String atomLink(Element entry) {

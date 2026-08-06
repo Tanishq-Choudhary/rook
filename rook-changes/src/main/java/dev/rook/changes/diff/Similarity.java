@@ -8,6 +8,8 @@ import java.util.Set;
 
 public final class Similarity {
 
+    private static final double CONTAINMENT_SCORE = 0.75;
+
     private Similarity() {}
 
     public static double names(String left, String right) {
@@ -30,7 +32,8 @@ public final class Similarity {
         Set<String> common = new HashSet<>(a);
         common.retainAll(new HashSet<>(b));
         double overlap = (double) common.size() / union.size();
-        return Math.max(edit, overlap);
+        double containment = common.size() == Math.min(a.size(), b.size()) ? CONTAINMENT_SCORE : 0;
+        return Math.max(Math.max(edit, overlap), containment);
     }
 
     public static List<String> tokens(String name) {

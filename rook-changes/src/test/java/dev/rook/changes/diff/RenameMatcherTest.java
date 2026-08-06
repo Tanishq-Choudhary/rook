@@ -88,4 +88,29 @@ class RenameMatcherTest {
         assertThat(renames).hasSize(1);
         assertThat(renames.get(0).to()).isIn("amount", "amount_minor");
     }
+
+    @Test
+    void lonePairsAreFoundPerTypeGroup() {
+        List<RenameMatcher.Rename> renames =
+                RenameMatcher.match(
+                        List.of("a", "b"),
+                        List.of("x"),
+                        types("a", "int", "b", "string"),
+                        types("x", "string"));
+        assertThat(renames).hasSize(1);
+        assertThat(renames.get(0).from()).isEqualTo("b");
+        assertThat(renames.get(0).to()).isEqualTo("x");
+    }
+
+    @Test
+    void anAddedPrefixCountsAsASimilarName() {
+        List<RenameMatcher.Rename> renames =
+                RenameMatcher.match(
+                        List.of("charge"),
+                        List.of("createCharge"),
+                        types("charge", "sig"),
+                        types("createCharge", "sig"));
+        assertThat(renames).hasSize(1);
+        assertThat(renames.get(0).confidence()).isGreaterThanOrEqualTo(0.7);
+    }
 }

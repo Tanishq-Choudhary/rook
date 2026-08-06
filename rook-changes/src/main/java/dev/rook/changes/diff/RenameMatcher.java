@@ -3,6 +3,7 @@ package dev.rook.changes.diff;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,13 +60,25 @@ public final class RenameMatcher {
             usedFrom.add(candidate.from());
             usedTo.add(candidate.to());
         }
-        List<String> leftoverRemoved = removed.stream().filter(n -> !usedFrom.contains(n)).toList();
-        List<String> leftoverAdded = added.stream().filter(n -> !usedTo.contains(n)).toList();
-        if (leftoverRemoved.size() == 1 && leftoverAdded.size() == 1) {
-            String from = leftoverRemoved.get(0);
-            String to = leftoverAdded.get(0);
-            if (removedTypes.get(from).equals(addedTypes.get(to))) {
-                accepted.add(new Rename(from, to, LONE_PAIR_CONFIDENCE));
+        Map<String, List<String>> removedByType = new LinkedHashMap<>();
+        Map<String, List<String>> addedByType = new LinkedHashMap<>();
+        for (String name : removed) {
+            if (!usedFrom.contains(name)) {
+                removedByType
+                        .computeIfAbsent(removedTypes.get(name), k -> new ArrayList<>())
+                        .add(name);
+            }
+        }
+        for (String name : added) {
+            if (!usedTo.contains(name)) {
+                addedByType.computeIfAbsent(addedTypes.get(name), k -> new ArrayList<>()).add(name);
+            }
+        }
+        for (Map.Entry<String, List<String>> group : removedByType.entrySet()) {
+            List<String> partners = addedByType.get(group.getKey());
+            if (partners != null && group.getValue().size() == 1 && partners.size() == 1) {
+                accepted.add(
+                        new Rename(group.getValue().get(0), partners.get(0), LONE_PAIR_CONFIDENCE));
             }
         }
         accepted.sort(Comparator.comparing(Rename::from));
