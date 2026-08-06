@@ -4,39 +4,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.rook.core.error.RookException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
 class OpenApiLoaderTest {
 
-    static String resource(String name) {
-        try (InputStream in = OpenApiLoaderTest.class.getResourceAsStream("/openapi/" + name)) {
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    static OpenApiDocument v1() {
-        return OpenApiLoader.load(resource("acme-v1.yaml"));
-    }
-
-    static OpenApiDocument v2() {
-        return OpenApiLoader.load(resource("acme-v2.yaml"));
-    }
-
     @Test
     void readsTitleAndVersion() {
-        OpenApiDocument doc = v1();
+        OpenApiDocument doc = SpecFixtures.v1();
         assertThat(doc.title()).isEqualTo("Acme Payments");
         assertThat(doc.version()).isEqualTo("1.4.0");
     }
 
     @Test
     void keysOperationsByMethodAndPath() {
-        assertThat(v1().operations())
+        assertThat(SpecFixtures.v1().operations())
                 .containsKeys(
                         "POST /v1/charges",
                         "GET /v1/charges",
@@ -47,7 +28,7 @@ class OpenApiLoaderTest {
 
     @Test
     void requestAndResponseSchemasAreReferences() {
-        ApiOperation create = v1().operations().get("POST /v1/charges");
+        ApiOperation create = SpecFixtures.v1().operations().get("POST /v1/charges");
         assertThat(create.operationId()).isEqualTo("createCharge");
         assertThat(create.requestBody().ref()).isEqualTo("CreateChargeRequest");
         assertThat(create.requestBodyRequired()).isTrue();
@@ -57,7 +38,7 @@ class OpenApiLoaderTest {
 
     @Test
     void pathParametersAreAlwaysRequired() {
-        ApiOperation get = v1().operations().get("GET /v1/charges/{id}");
+        ApiOperation get = SpecFixtures.v1().operations().get("GET /v1/charges/{id}");
         ApiParameter id = get.parametersByKey().get("path:id");
         assertThat(id.required()).isTrue();
         assertThat(id.schema().type()).isEqualTo("string");
@@ -65,14 +46,14 @@ class OpenApiLoaderTest {
 
     @Test
     void queryParametersAreOptionalByDefault() {
-        ApiOperation list = v1().operations().get("GET /v1/charges");
+        ApiOperation list = SpecFixtures.v1().operations().get("GET /v1/charges");
         assertThat(list.parametersByKey().get("query:limit").required()).isFalse();
         assertThat(list.parametersByKey().get("query:limit").schema().type()).isEqualTo("integer");
     }
 
     @Test
     void componentSchemaFieldsRequiredAndEnums() {
-        ApiSchema charge = v1().schema("Charge");
+        ApiSchema charge = SpecFixtures.v1().schema("Charge");
         assertThat(charge.properties())
                 .containsKeys("id", "amount", "currency", "status", "customer_id");
         assertThat(charge.required()).containsExactly("amount", "currency", "id", "status");
@@ -83,7 +64,7 @@ class OpenApiLoaderTest {
 
     @Test
     void arrayItemsKeepTheirReference() {
-        ApiSchema data = v1().schema("ChargeList").properties().get("data");
+        ApiSchema data = SpecFixtures.v1().schema("ChargeList").properties().get("data");
         assertThat(data.type()).isEqualTo("array");
         assertThat(data.items().ref()).isEqualTo("Charge");
         assertThat(data.typeLabel()).isEqualTo("array[ref:Charge]");
@@ -91,10 +72,10 @@ class OpenApiLoaderTest {
 
     @Test
     void deprecatedOperationsCarryTheSunsetExtension() {
-        ApiOperation refund = v2().operations().get("POST /v1/refunds");
+        ApiOperation refund = SpecFixtures.v2().operations().get("POST /v1/refunds");
         assertThat(refund.deprecated()).isTrue();
         assertThat(refund.sunset()).isEqualTo("2027-03-01");
-        assertThat(v1().operations().get("POST /v1/refunds").deprecated()).isFalse();
+        assertThat(SpecFixtures.v1().operations().get("POST /v1/refunds").deprecated()).isFalse();
     }
 
     @Test

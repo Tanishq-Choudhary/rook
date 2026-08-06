@@ -31,7 +31,7 @@ class OperationDiffTest {
 
     @Test
     void identicalDocumentsProduceNoEvents() {
-        OpenApiDocument doc = OpenApiLoaderTest.v1();
+        OpenApiDocument doc = SpecFixtures.v1();
         assertThat(OpenApiDiffer.diff("acme", doc, doc)).isEmpty();
     }
 
@@ -146,8 +146,7 @@ class OperationDiffTest {
 
     @Test
     void ambiguousReplacementsAreLeftUnlinked() {
-        List<ChangeEvent> events =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> events = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         ChangeEvent removed =
                 find(events, ChangeKind.PARAMETER_REMOVED, "GET /v1/charges query:starting_after")
                         .orElseThrow();
@@ -177,8 +176,7 @@ class OperationDiffTest {
 
     @Test
     void fullFixtureDiffFindsTheExpectedOperationChanges() {
-        List<ChangeEvent> events =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> events = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         assertThat(find(events, ChangeKind.OPERATION_REMOVED, "GET /v1/charges/{id}"))
                 .get()
                 .extracting(e -> e.attribute(Attr.REPLACEMENT))
@@ -195,10 +193,8 @@ class OperationDiffTest {
 
     @Test
     void eventsAreSortedBreakingFirstAndDeterministic() {
-        List<ChangeEvent> first =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
-        List<ChangeEvent> second =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> first = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
+        List<ChangeEvent> second = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         assertThat(first).isEqualTo(second);
         assertThat(first.get(0).severity()).isEqualTo(Severity.BREAKING);
         for (int i = 1; i < first.size(); i++) {
@@ -209,8 +205,8 @@ class OperationDiffTest {
 
     @Test
     void fingerprintsDependOnTheVersionPair() {
-        OpenApiDocument a = OpenApiLoaderTest.v1();
-        OpenApiDocument b = OpenApiLoaderTest.v2();
+        OpenApiDocument a = SpecFixtures.v1();
+        OpenApiDocument b = SpecFixtures.v2();
         List<ChangeEvent> one = OpenApiDiffer.diff("acme", "1", "2", a, b);
         List<ChangeEvent> two = OpenApiDiffer.diff("acme", "1", "3", a, b);
         assertThat(one)

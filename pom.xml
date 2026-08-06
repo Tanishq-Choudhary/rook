@@ -13,8 +13,8 @@
   <modules>
     <module>rook-core</module>
     <module>rook-db</module>
-    <module>rook-changes</module>
     <module>rook-testkit</module>
+    <module>rook-changes</module>
     <module>rook-server</module>
   </modules>
 

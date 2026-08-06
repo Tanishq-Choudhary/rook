@@ -54,8 +54,7 @@ class SchemaDiffTest {
 
     @Test
     void fixtureRenameIsDetectedWithConfidence() {
-        List<ChangeEvent> events =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> events = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         ChangeEvent renamed =
                 find(events, ChangeKind.FIELD_RENAMED, "Charge.customer_id").orElseThrow();
         assertThat(renamed.attribute(Attr.REPLACEMENT)).isEqualTo("customer");
@@ -66,8 +65,7 @@ class SchemaDiffTest {
 
     @Test
     void fixtureEnumChangesAreReported() {
-        List<ChangeEvent> events =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> events = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         assertThat(find(events, ChangeKind.ENUM_VALUE_REMOVED, "Charge.status=failed")).isPresent();
         assertThat(find(events, ChangeKind.ENUM_VALUE_ADDED, "Charge.status=declined")).isPresent();
         assertThat(find(events, ChangeKind.ENUM_VALUE_ADDED, "Charge.status=refunded")).isPresent();
@@ -77,8 +75,7 @@ class SchemaDiffTest {
 
     @Test
     void fixtureTypeAndRequirementChangesAreReported() {
-        List<ChangeEvent> events =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> events = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         ChangeEvent created =
                 find(events, ChangeKind.RESPONSE_FIELD_TYPE_CHANGED, "Charge.created")
                         .orElseThrow();
@@ -101,8 +98,7 @@ class SchemaDiffTest {
 
     @Test
     void unchangedSchemasStaySilent() {
-        List<ChangeEvent> events =
-                OpenApiDiffer.diff("acme", OpenApiLoaderTest.v1(), OpenApiLoaderTest.v2());
+        List<ChangeEvent> events = OpenApiDiffer.diff("acme", SpecFixtures.v1(), SpecFixtures.v2());
         assertThat(events)
                 .noneMatch(e -> e.subject().name().startsWith("Customer."))
                 .noneMatch(e -> e.subject().name().startsWith("Error."));
