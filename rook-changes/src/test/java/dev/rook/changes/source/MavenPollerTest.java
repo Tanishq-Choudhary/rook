@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.rook.changes.http.FetchPolicy;
 import dev.rook.changes.http.SafeHttpFetcher;
-import dev.rook.changes.jar.TestJars;
 import dev.rook.core.change.Attr;
 import dev.rook.core.change.ChangeEvent;
 import dev.rook.core.change.ChangeKind;
@@ -14,6 +13,7 @@ import dev.rook.core.change.SourceKind;
 import dev.rook.core.error.ErrorCode;
 import dev.rook.core.error.RookException;
 import dev.rook.core.json.Json;
+import dev.rook.testkit.TestJars;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

@@ -1,4 +1,4 @@
-package dev.rook.changes.jar;
+package dev.rook.testkit;
 
 import java.io.IOException;
 import java.io.OutputStream;
