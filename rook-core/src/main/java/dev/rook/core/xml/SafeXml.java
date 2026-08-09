@@ -1,4 +1,4 @@
-package dev.rook.changes.xml;
+package dev.rook.core.xml;
 
 import dev.rook.core.error.RookException;
 import java.io.ByteArrayInputStream;

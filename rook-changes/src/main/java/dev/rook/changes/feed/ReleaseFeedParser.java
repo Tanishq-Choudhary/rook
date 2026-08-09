@@ -1,8 +1,8 @@
 package dev.rook.changes.feed;
 
-import dev.rook.changes.xml.SafeXml;
 import dev.rook.core.error.RookException;
 import dev.rook.core.json.Json;
+import dev.rook.core.xml.SafeXml;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;

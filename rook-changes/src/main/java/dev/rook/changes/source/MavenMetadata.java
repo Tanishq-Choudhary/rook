@@ -1,6 +1,6 @@
 package dev.rook.changes.source;
 
-import dev.rook.changes.xml.SafeXml;
+import dev.rook.core.xml.SafeXml;
 import java.util.ArrayList;
 import java.util.List;
 import org.w3c.dom.Document;
