@@ -123,7 +123,8 @@ public final class JavaIndexer {
                                         new ImportInfo(
                                                 i.getNameAsString(),
                                                 i.isStatic(),
-                                                i.isAsterisk())));
+                                                i.isAsterisk(),
+                                                line(i))));
         List<TypeInfo> types = new ArrayList<>();
         for (var declaration : unit.findAll(com.github.javaparser.ast.body.TypeDeclaration.class)) {
             types.add(typeOf(path, declaration));

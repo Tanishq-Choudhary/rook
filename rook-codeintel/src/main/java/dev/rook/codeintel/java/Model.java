@@ -87,7 +87,7 @@ public final class Model {
         }
     }
 
-    public record ImportInfo(String name, boolean isStatic, boolean wildcard) {}
+    public record ImportInfo(String name, boolean isStatic, boolean wildcard, int line) {}
 
     public record FileIndex(
             String path,
