@@ -16,6 +16,7 @@
     <module>rook-testkit</module>
     <module>rook-changes</module>
     <module>rook-codeintel</module>
+    <module>rook-workflow</module>
     <module>rook-server</module>
   </modules>
 
@@ -78,6 +79,11 @@
       <dependency>
         <groupId>dev.rook</groupId>
         <artifactId>rook-codeintel</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.rook</groupId>
+        <artifactId>rook-workflow</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>
