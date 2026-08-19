@@ -3,6 +3,7 @@ package dev.rook.workflow;
 import dev.rook.core.id.Ids;
 import dev.rook.testkit.TestClock;
 import dev.rook.testkit.TestDatabases;
+import java.time.Clock;
 import java.util.UUID;
 import javax.sql.DataSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -14,12 +15,21 @@ final class WorkflowFixtures {
     final DataSource dataSource;
     final JdbcClient jdbc;
     final TransactionTemplate tx;
-    final TestClock clock = TestClock.at("2026-08-16T10:00:00Z");
+    final Clock clock;
     final JobRepository jobs;
     private final UUID installation = Ids.newId();
     private int counter;
 
     WorkflowFixtures() {
+        this(TestClock.at("2026-08-16T10:00:00Z"));
+    }
+
+    static WorkflowFixtures live() {
+        return new WorkflowFixtures(Clock.systemUTC());
+    }
+
+    WorkflowFixtures(Clock clock) {
+        this.clock = clock;
         dataSource = TestDatabases.fresh();
         jdbc = JdbcClient.create(dataSource);
         tx = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
@@ -30,6 +40,10 @@ final class WorkflowFixtures {
         jdbc.sql("insert into installation (id, account_login) values (:id, 'acme')")
                 .param("id", installation)
                 .update();
+    }
+
+    TestClock testClock() {
+        return (TestClock) clock;
     }
 
     UUID repository() {

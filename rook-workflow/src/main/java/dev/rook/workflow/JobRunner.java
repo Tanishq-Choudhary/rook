@@ -48,6 +48,10 @@ public class JobRunner implements AutoCloseable {
     }
 
     public RunResult runOnce(String workerId) {
+        return runOnce(workerId, CrashSignal.NEVER);
+    }
+
+    public RunResult runOnce(String workerId, CrashSignal crash) {
         Optional<JobRepository.Claim> claimed = jobs.claim(workerId, config.lease());
         if (claimed.isEmpty()) {
             return RunResult.idle();
@@ -74,9 +78,15 @@ public class JobRunner implements AutoCloseable {
         long started = System.nanoTime();
         Future<StepResult> future = executor.submit(() -> handler.execute(context));
         try {
-            StepResult result = await(future, context, job);
+            StepResult result = await(future, context, job, crash);
+            if (crash.crashed()) {
+                throw new Crashed();
+            }
             Duration took = Duration.ofNanos(System.nanoTime() - started);
             return apply(job, result, took);
+        } catch (Crashed e) {
+            future.cancel(true);
+            return new RunResult(Outcome.CRASHED, job.id(), job.state());
         } catch (LeaseLostException e) {
             return leaseLost(job, Duration.ofNanos(System.nanoTime() - started));
         } catch (TimeoutException e) {
@@ -94,10 +104,14 @@ public class JobRunner implements AutoCloseable {
         }
     }
 
-    private StepResult await(Future<StepResult> future, JobContext context, Job job)
+    private StepResult await(
+            Future<StepResult> future, JobContext context, Job job, CrashSignal crash)
             throws InterruptedException, ExecutionException, TimeoutException {
         long deadline = System.nanoTime() + config.stepTimeout().toNanos();
         while (true) {
+            if (crash.crashed()) {
+                throw new Crashed();
+            }
             long remaining = deadline - System.nanoTime();
             if (remaining <= 0) {
                 future.cancel(true);
@@ -107,6 +121,9 @@ public class JobRunner implements AutoCloseable {
             try {
                 return future.get(wait, TimeUnit.NANOSECONDS);
             } catch (TimeoutException tick) {
+                if (crash.crashed()) {
+                    throw new Crashed();
+                }
                 if (!jobs.heartbeat(job.id(), job.fence(), config.lease())) {
                     context.markLeaseLost();
                     future.cancel(true);
@@ -224,5 +241,12 @@ public class JobRunner implements AutoCloseable {
     @Override
     public void close() {
         executor.shutdownNow();
+    }
+
+    private static final class Crashed extends RuntimeException {
+
+        Crashed() {
+            super("worker crashed", null, false, false);
+        }
     }
 }

@@ -181,9 +181,9 @@ class JobRunnerIT {
         assertThat(afterFirst.lastError()).contains("network blip 1");
         assertThat(afterFirst.nextRunAt()).isAfter(fixtures.clock.instant());
         assertThat(runner.runOnce("w1").outcome()).isEqualTo(Outcome.IDLE);
-        fixtures.clock.advance(Duration.ofMinutes(2));
+        fixtures.testClock().advance(Duration.ofMinutes(2));
         assertThat(runner.runOnce("w1").outcome()).isEqualTo(Outcome.RETRY_SCHEDULED);
-        fixtures.clock.advance(Duration.ofMinutes(2));
+        fixtures.testClock().advance(Duration.ofMinutes(2));
         assertThat(runner.runOnce("w1").outcome()).isEqualTo(Outcome.ADVANCED);
         Job after = jobs.find(id).orElseThrow();
         assertThat(after.state()).isEqualTo(JobState.PROPOSING);
@@ -208,7 +208,7 @@ class JobRunnerIT {
                                 }));
         Outcome last = Outcome.IDLE;
         for (int i = 0; i < 10 && last != Outcome.DEAD; i++) {
-            fixtures.clock.advance(Duration.ofMinutes(5));
+            fixtures.testClock().advance(Duration.ofMinutes(5));
             last = runner.runOnce("w1").outcome();
         }
         assertThat(last).isEqualTo(Outcome.DEAD);
@@ -315,7 +315,7 @@ class JobRunnerIT {
         try (ExecutorService pool = Executors.newSingleThreadExecutor()) {
             Future<RunResult> run = pool.submit(() -> slow.runOnce("slow"));
             assertThat(started.await(10, TimeUnit.SECONDS)).isTrue();
-            fixtures.clock.advance(CONFIG.lease().plusSeconds(5));
+            fixtures.testClock().advance(CONFIG.lease().plusSeconds(5));
             JobRepository.Claim takeover = jobs.claim("fast", CONFIG.lease()).orElseThrow();
             assertThat(takeover.reclaimed()).isTrue();
             RunResult result = run.get(10, TimeUnit.SECONDS);
@@ -335,10 +335,10 @@ class JobRunnerIT {
         Job first = jobs.claim("crasher", CONFIG.lease()).orElseThrow().job();
         assertThat(first.attempt()).isZero();
         for (int i = 0; i < first.maxAttempts(); i++) {
-            fixtures.clock.advance(CONFIG.lease().plusSeconds(1));
+            fixtures.testClock().advance(CONFIG.lease().plusSeconds(1));
             assertThat(jobs.claim("crasher", CONFIG.lease())).isPresent();
         }
-        fixtures.clock.advance(CONFIG.lease().plusSeconds(1));
+        fixtures.testClock().advance(CONFIG.lease().plusSeconds(1));
         AtomicInteger executions = new AtomicInteger();
         JobRunner runner =
                 runner(
@@ -373,9 +373,9 @@ class JobRunnerIT {
         try (ExecutorService pool = Executors.newSingleThreadExecutor()) {
             Future<RunResult> run = pool.submit(() -> runner.runOnce("w1"));
             assertThat(started.await(10, TimeUnit.SECONDS)).isTrue();
-            fixtures.clock.advance(Duration.ofSeconds(20));
+            fixtures.testClock().advance(Duration.ofSeconds(20));
             Thread.sleep(200);
-            fixtures.clock.advance(Duration.ofSeconds(20));
+            fixtures.testClock().advance(Duration.ofSeconds(20));
             Thread.sleep(200);
             assertThat(jobs.claim("other", CONFIG.lease())).isEmpty();
             release.countDown();

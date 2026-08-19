@@ -70,7 +70,7 @@ class JobRepositoryIT {
         Job first = jobs.claim("w1", LEASE).orElseThrow().job();
         assertThat(jobs.retry(id, first.fence(), "boom", Duration.ofMinutes(5))).isEqualTo(1);
         assertThat(jobs.claim("w1", LEASE)).isEmpty();
-        fixtures.clock.advance(Duration.ofMinutes(5));
+        fixtures.testClock().advance(Duration.ofMinutes(5));
         Job again = jobs.claim("w1", LEASE).orElseThrow().job();
         assertThat(again.id()).isEqualTo(id);
         assertThat(again.attempt()).isEqualTo(1);
@@ -82,9 +82,9 @@ class JobRepositoryIT {
     void expiredLeasesAreReclaimedAndCountAsAnAttempt() {
         UUID id = fixtures.job(fixtures.repository());
         Job first = jobs.claim("crashed", LEASE).orElseThrow().job();
-        fixtures.clock.advance(LEASE.minusSeconds(1));
+        fixtures.testClock().advance(LEASE.minusSeconds(1));
         assertThat(jobs.claim("w2", LEASE)).isEmpty();
-        fixtures.clock.advance(Duration.ofSeconds(2));
+        fixtures.testClock().advance(Duration.ofSeconds(2));
         JobRepository.Claim claim = jobs.claim("w2", LEASE).orElseThrow();
         assertThat(claim.reclaimed()).isTrue();
         assertThat(claim.previousOwner()).isEqualTo("crashed");
@@ -97,9 +97,9 @@ class JobRepositoryIT {
     @Test
     void higherPriorityJobsGoFirstThenTheOldest() {
         UUID low = fixtures.job(fixtures.repository(), 0);
-        fixtures.clock.advance(Duration.ofSeconds(1));
+        fixtures.testClock().advance(Duration.ofSeconds(1));
         UUID high = fixtures.job(fixtures.repository(), 5);
-        fixtures.clock.advance(Duration.ofSeconds(1));
+        fixtures.testClock().advance(Duration.ofSeconds(1));
         UUID lowLater = fixtures.job(fixtures.repository(), 0);
         List<UUID> order = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
@@ -112,7 +112,7 @@ class JobRepositoryIT {
     void aRepositoryRunsOneJobAtATime() {
         UUID repository = fixtures.repository();
         UUID first = fixtures.job(repository);
-        fixtures.clock.advance(Duration.ofSeconds(1));
+        fixtures.testClock().advance(Duration.ofSeconds(1));
         UUID second = fixtures.job(repository);
         Job running = jobs.claim("w1", LEASE).orElseThrow().job();
         assertThat(running.id()).isEqualTo(first);
@@ -140,7 +140,7 @@ class JobRepositoryIT {
         advanceTo(first, proposing.fence(), JobState.PROPOSING, JobState.VERIFYING);
         Job verifying = jobs.claim("w1", LEASE).orElseThrow().job();
         advanceTo(first, verifying.fence(), JobState.VERIFYING, JobState.AWAITING_APPROVAL);
-        fixtures.clock.advance(Duration.ofSeconds(1));
+        fixtures.testClock().advance(Duration.ofSeconds(1));
         UUID second = fixtures.job(repository);
         assertThat(jobs.claim("w2", LEASE).orElseThrow().job().id()).isEqualTo(second);
     }
@@ -188,7 +188,7 @@ class JobRepositoryIT {
     void heartbeatsExtendTheLeaseOnlyForTheCurrentFence() {
         UUID id = fixtures.job(fixtures.repository());
         Job job = jobs.claim("w1", LEASE).orElseThrow().job();
-        fixtures.clock.advance(Duration.ofSeconds(20));
+        fixtures.testClock().advance(Duration.ofSeconds(20));
         assertThat(jobs.heartbeat(id, job.fence(), LEASE)).isTrue();
         assertThat(jobs.find(id).orElseThrow().leaseExpiresAt())
                 .isEqualTo(fixtures.clock.instant().plus(LEASE));
@@ -200,7 +200,7 @@ class JobRepositoryIT {
     void aStaleWorkerCannotWriteAfterTheJobWasReclaimed() {
         UUID id = fixtures.job(fixtures.repository());
         Job stale = jobs.claim("w1", LEASE).orElseThrow().job();
-        fixtures.clock.advance(LEASE.plusSeconds(1));
+        fixtures.testClock().advance(LEASE.plusSeconds(1));
         Job fresh = jobs.claim("w2", LEASE).orElseThrow().job();
         assertThat(
                         jobs.advance(
@@ -386,7 +386,7 @@ class JobRepositoryIT {
         UUID repository = fixtures.repository();
         for (int i = 0; i < 20; i++) {
             fixtures.job(repository);
-            fixtures.clock.advance(Duration.ofMillis(5));
+            fixtures.testClock().advance(Duration.ofMillis(5));
         }
         int workers = 10;
         CountDownLatch start = new CountDownLatch(1);

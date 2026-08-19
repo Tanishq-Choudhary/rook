@@ -13,7 +13,8 @@ public record RunResult(Outcome outcome, UUID jobId, JobState state) {
         DEAD,
         FAILED,
         LEASE_LOST,
-        RELEASED
+        RELEASED,
+        CRASHED
     }
 
     public static RunResult idle() {
