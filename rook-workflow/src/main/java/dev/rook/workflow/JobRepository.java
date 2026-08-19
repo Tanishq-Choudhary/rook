@@ -437,6 +437,10 @@ public class JobRepository {
         return counts;
     }
 
+    public void recordEvent(UUID jobId, String kind, JobState state, Map<String, ?> data) {
+        appendEvent(jobId, kind, state, data);
+    }
+
     void appendEvent(UUID jobId, String kind, JobState state, Map<String, ?> data) {
         jdbc.sql(
                         """
