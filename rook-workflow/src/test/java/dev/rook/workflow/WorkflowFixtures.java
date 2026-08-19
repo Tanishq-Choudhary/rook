@@ -10,43 +10,48 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-final class WorkflowFixtures {
+public final class WorkflowFixtures {
 
-    final DataSource dataSource;
-    final JdbcClient jdbc;
-    final TransactionTemplate tx;
-    final Clock clock;
-    final JobRepository jobs;
+    public final DataSource dataSource;
+    public final JdbcClient jdbc;
+    public final TransactionTemplate tx;
+    public final Clock clock;
+    public final JobRepository jobs;
     private final UUID installation = Ids.newId();
     private int counter;
 
-    WorkflowFixtures() {
+    public WorkflowFixtures() {
         this(TestClock.at("2026-08-16T10:00:00Z"));
     }
 
-    static WorkflowFixtures live() {
+    public static WorkflowFixtures live() {
         return new WorkflowFixtures(Clock.systemUTC());
     }
 
-    WorkflowFixtures(Clock clock) {
+    public WorkflowFixtures(Clock clock) {
         this.clock = clock;
         dataSource = TestDatabases.fresh();
         jdbc = JdbcClient.create(dataSource);
         tx = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
         jobs = new JobRepository(jdbc, tx, clock);
-        jdbc.sql(
-                        "insert into watched_source (id, kind, display_name, location) values ('src', 'OPENAPI', 'src', 'http://x')")
-                .update();
+        source("src");
         jdbc.sql("insert into installation (id, account_login) values (:id, 'acme')")
                 .param("id", installation)
                 .update();
     }
 
-    TestClock testClock() {
+    public TestClock testClock() {
         return (TestClock) clock;
     }
 
-    UUID repository() {
+    public void source(String id) {
+        jdbc.sql(
+                        "insert into watched_source (id, kind, display_name, location) values (:id, 'OPENAPI', :id, 'http://x')")
+                .param("id", id)
+                .update();
+    }
+
+    public UUID repository() {
         UUID id = Ids.newId();
         jdbc.sql("insert into repository (id, installation_id, full_name) values (:id, :i, :name)")
                 .param("id", id)
@@ -56,29 +61,36 @@ final class WorkflowFixtures {
         return id;
     }
 
-    UUID changeSet() {
+    public UUID changeSet() {
+        return changeSet("src", true, "BREAKING");
+    }
+
+    public UUID changeSet(String source, boolean requiresMigration, String severity) {
         UUID id = Ids.newId();
         jdbc.sql(
                         """
                         insert into change_set (id, source_id, change_key, from_version, to_version,
                           highest_severity, requires_migration, detected_at)
-                        values (:id, 'src', :key, '1', '2', 'BREAKING', true, now())
+                        values (:id, :source, :key, '1', '2', :severity, :migrate, now())
                         """)
                 .param("id", id)
+                .param("source", source)
                 .param("key", "key-" + (++counter))
+                .param("severity", severity)
+                .param("migrate", requiresMigration)
                 .update();
         return id;
     }
 
-    UUID job(UUID repository) {
+    public UUID job(UUID repository) {
         return jobs.create(changeSet(), repository, 0, 5).jobId();
     }
 
-    UUID job(UUID repository, int priority) {
+    public UUID job(UUID repository, int priority) {
         return jobs.create(changeSet(), repository, priority, 5).jobId();
     }
 
-    int count(String sql) {
+    public int count(String sql) {
         return jdbc.sql(sql).query(Integer.class).single();
     }
 }
