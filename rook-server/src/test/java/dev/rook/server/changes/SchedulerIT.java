@@ -21,7 +21,8 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
         properties = {
             "rook.changes.allow-local-http=true",
             "rook.changes.scheduler-delay=PT0.2S",
-            "rook.role=worker"
+            "rook.role=worker",
+            "rook.workflow.enabled=false"
         })
 @Testcontainers
 class SchedulerIT {

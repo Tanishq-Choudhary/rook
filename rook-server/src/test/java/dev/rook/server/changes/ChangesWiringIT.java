@@ -22,7 +22,11 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @AutoConfigureMetrics
 @SpringBootTest(
-        properties = {"rook.changes.allow-local-http=true", "rook.changes.scheduler-enabled=false"})
+        properties = {
+            "rook.changes.allow-local-http=true",
+            "rook.changes.scheduler-enabled=false",
+            "rook.workflow.enabled=false"
+        })
 @Testcontainers
 class ChangesWiringIT {
 

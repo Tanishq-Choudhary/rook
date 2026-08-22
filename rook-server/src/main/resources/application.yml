@@ -44,3 +44,6 @@ logging:
 
 rook:
   role: ${ROOK_ROLE:all}
+  workflow:
+    bootstrap-servers: ${ROOK_KAFKA_BOOTSTRAP:localhost:9092}
+    workers: ${ROOK_WORKERS:4}
