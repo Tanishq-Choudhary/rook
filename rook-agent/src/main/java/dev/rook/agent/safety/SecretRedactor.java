@@ -80,7 +80,8 @@ public final class SecretRedactor {
                 continue;
             }
             assignment.appendReplacement(
-                    out, Matcher.quoteReplacement(assignment.group("head") + PREFIX + "assignment]"));
+                    out,
+                    Matcher.quoteReplacement(assignment.group("head") + PREFIX + "assignment]"));
             found++;
         }
         assignment.appendTail(out);
