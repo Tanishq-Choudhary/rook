@@ -2,6 +2,7 @@ package dev.rook.agent.workspace;
 
 import dev.rook.agent.patch.EditApplier;
 import dev.rook.agent.patch.FileDiff;
+import dev.rook.agent.patch.PatchRejected;
 import dev.rook.agent.patch.UnifiedDiff;
 import dev.rook.codeintel.RepoFiles;
 import dev.rook.core.error.RookException;
@@ -113,6 +114,34 @@ public final class Workspace {
         Path file = resolve(path);
         String relative = relative(file);
         policy.checkEdit(relative);
+        guardEditBudget(relative);
+        String current = load(file, path);
+        EditApplier.Applied applied = EditApplier.apply(current, search, replace);
+        return commit(file, relative, current, applied.content(), applied.line(), search, replace);
+    }
+
+    public EditRecord rewrite(String path, String content) {
+        Path file = resolve(path);
+        String relative = relative(file);
+        policy.checkEdit(relative);
+        guardEditBudget(relative);
+        String current = load(file, path);
+        if (current.equals(content)) {
+            throw new PatchRejected(
+                    PatchRejected.Reason.NO_CHANGE,
+                    "the rewritten file is identical to the original");
+        }
+        return commit(
+                file,
+                relative,
+                current,
+                content,
+                firstDifference(current, content),
+                current,
+                content);
+    }
+
+    private void guardEditBudget(String relative) {
         if (log.size() >= policy.maxEdits()) {
             throw new WorkspaceViolation(
                     WorkspaceViolation.Code.LIMIT_REACHED,
@@ -123,15 +152,23 @@ public final class Workspace {
                     WorkspaceViolation.Code.LIMIT_REACHED,
                     "the limit of " + policy.maxFilesTouched() + " changed files is reached");
         }
-        String current = load(file, path);
-        EditApplier.Applied applied = EditApplier.apply(current, search, replace);
-        if (applied.content().getBytes(StandardCharsets.UTF_8).length > policy.maxFileBytes()) {
+    }
+
+    private EditRecord commit(
+            Path file,
+            String relative,
+            String current,
+            String updated,
+            int line,
+            String removed,
+            String added) {
+        if (updated.getBytes(StandardCharsets.UTF_8).length > policy.maxFileBytes()) {
             throw new WorkspaceViolation(
                     WorkspaceViolation.Code.TOO_LARGE,
                     "the edited file would exceed the size limit");
         }
         String original = originals.getOrDefault(relative, current);
-        if (changedLines(relative, original, applied.content()) + otherChangedLines(relative)
+        if (changedLines(relative, original, updated) + otherChangedLines(relative)
                 > policy.maxChangedLines()) {
             throw new WorkspaceViolation(
                     WorkspaceViolation.Code.LIMIT_REACHED,
@@ -139,17 +176,27 @@ public final class Workspace {
                             + policy.maxChangedLines()
                             + " changed lines would be exceeded");
         }
-        store(file, applied.content());
+        store(file, updated);
         originals.putIfAbsent(relative, current);
         EditRecord record =
-                new EditRecord(
-                        log.size() + 1,
-                        relative,
-                        applied.line(),
-                        search.length(),
-                        replace.length());
+                new EditRecord(log.size() + 1, relative, line, removed.length(), added.length());
         log.add(record);
         return record;
+    }
+
+    private static int firstDifference(String before, String after) {
+        int limit = Math.min(before.length(), after.length());
+        int at = 0;
+        while (at < limit && before.charAt(at) == after.charAt(at)) {
+            at++;
+        }
+        int line = 1;
+        for (int i = 0; i < at; i++) {
+            if (before.charAt(i) == '\n') {
+                line++;
+            }
+        }
+        return line;
     }
 
     public List<EditRecord> log() {

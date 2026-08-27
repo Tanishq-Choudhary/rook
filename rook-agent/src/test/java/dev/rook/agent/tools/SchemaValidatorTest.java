@@ -96,8 +96,8 @@ class SchemaValidatorTest {
     @Test
     void patternsAreMatchedWithFind() {
         JsonNode pattern = Json.tree(Map.of("type", "string", "pattern", "^[a-z]+$"));
-        assertThat(SchemaValidator.validate(pattern, Json.tree("abc"))).isEmpty();
-        assertThat(SchemaValidator.validate(pattern, Json.tree("ab1"))).hasSize(1);
+        assertThat(SchemaValidator.validate(pattern, Json.mapper().valueToTree("abc"))).isEmpty();
+        assertThat(SchemaValidator.validate(pattern, Json.mapper().valueToTree("ab1"))).hasSize(1);
     }
 
     @Test

@@ -194,7 +194,7 @@ class BuiltinToolsTest {
         String text = run("search_symbol", Map.of("query", "CHARGE")).text();
         assertThat(text).contains("FIELD com.shop.Other.charge");
         String types = run("search_symbol", Map.of("query", "service")).text();
-        assertThat(types).contains("TYPE com.shop.Service (class)");
+        assertThat(types).contains("TYPE com.shop.Service (CLASS)");
         String methods = run("search_symbol", Map.of("query", "go")).text();
         assertThat(methods).contains("METHOD com.shop.Service#go()");
         assertThat(run("search_symbol", Map.of("query", "zzzz")).text())

@@ -307,4 +307,41 @@ class WorkspaceTest {
         assertThat(workspace.originals().get("src/main/java/App.java")).contains("return 1;");
         assertThat(workspace.root()).isEqualTo(target.toAbsolutePath().normalize());
     }
+
+    @Test
+    void rewriteReplacesTheWholeFileAndCountsAsOneEdit() throws IOException {
+        Workspace workspace = workspace();
+        Workspace.EditRecord record =
+                workspace.rewrite(
+                        "src/main/java/App.java",
+                        "class App {\n    int value() {\n        return 5;\n    }\n}\n");
+        assertThat(record.line()).isEqualTo(3);
+        assertThat(Files.readString(target.resolve("src/main/java/App.java")))
+                .contains("return 5;");
+        assertThat(workspace.changedPaths()).containsExactly("src/main/java/App.java");
+        assertThat(workspace.log()).hasSize(1);
+    }
+
+    @Test
+    void rewriteWithIdenticalContentIsRejected() throws IOException {
+        Workspace workspace = workspace();
+        String same = Files.readString(target.resolve("src/main/java/App.java"));
+        assertThatThrownBy(() -> workspace.rewrite("src/main/java/App.java", same))
+                .isInstanceOf(PatchRejected.class);
+    }
+
+    @Test
+    void rewriteFollowsTheSameDenialAndLimitRules() {
+        Workspace workspace =
+                Workspace.copyOf(source, target, WorkspacePolicy.standard().withLimits(5, 10, 2));
+        assertThat(violation(() -> workspace.rewrite("pom.xml", "<project></project>\n")))
+                .isEqualTo(WorkspaceViolation.Code.DENIED);
+        assertThat(
+                        violation(
+                                () ->
+                                        workspace.rewrite(
+                                                "src/main/java/App.java",
+                                                "class Other {\n    int a;\n    int b;\n    int c;\n}\n")))
+                .isEqualTo(WorkspaceViolation.Code.LIMIT_REACHED);
+    }
 }
