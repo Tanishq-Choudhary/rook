@@ -57,7 +57,7 @@ public final class RenameMethodCodemod implements Codemod {
                                                 path, loaded.get().java().print(), edits));
                             }
                         });
-        return new CodemodPlan(name(), rewrites, skipped, SourceFiles.weakest(used));
+        return new CodemodPlan(name(), rewrites, skipped, SourceFiles.weakest(used), used);
     }
 
     private int rename(SourceFiles.Loaded file, List<String> skipped, List<ImpactLocation> used) {

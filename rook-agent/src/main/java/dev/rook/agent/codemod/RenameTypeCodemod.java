@@ -60,6 +60,7 @@ public final class RenameTypeCodemod implements Codemod {
     public CodemodPlan plan(Workspace workspace, List<ImpactLocation> locations) {
         List<CodemodPlan.FileRewrite> rewrites = new ArrayList<>();
         List<String> skipped = new ArrayList<>();
+        List<ImpactLocation> handled = new ArrayList<>();
         SourceFiles.byFile(locations, Set.of())
                 .forEach(
                         (path, fileLocations) -> {
@@ -75,9 +76,10 @@ public final class RenameTypeCodemod implements Codemod {
                                 rewrites.add(
                                         new CodemodPlan.FileRewrite(
                                                 path, edits.apply(), edits.count()));
+                                handled.addAll(fileLocations);
                             }
                         });
-        return new CodemodPlan(name(), rewrites, skipped, SourceFiles.weakest(locations));
+        return new CodemodPlan(name(), rewrites, skipped, SourceFiles.weakest(handled), handled);
     }
 
     private void plan(CompilationUnit unit, String path, SourceEdits edits, List<String> skipped) {
