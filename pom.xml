@@ -18,6 +18,7 @@
     <module>rook-codeintel</module>
     <module>rook-workflow</module>
     <module>rook-agent</module>
+    <module>rook-verify</module>
     <module>rook-server</module>
   </modules>
 
@@ -90,6 +91,11 @@
       <dependency>
         <groupId>dev.rook</groupId>
         <artifactId>rook-agent</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.rook</groupId>
+        <artifactId>rook-verify</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>
