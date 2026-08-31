@@ -120,7 +120,8 @@ final class AgentFixtures {
                         List.of(
                                 new MigrationNote(
                                         "Guide", "Use createCharge.", "https://example.test")),
-                        JavaIndexer.index(repo));
+                        JavaIndexer.index(repo),
+                        "");
         workspace = Workspace.copyOf(repo, temp.resolve("work"), WorkspacePolicy.standard());
         SandboxPort toolSandbox = sandbox == null ? (root, scope) -> TestRun.passing(1) : sandbox;
         AgentListener recorder =

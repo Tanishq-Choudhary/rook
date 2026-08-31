@@ -61,6 +61,7 @@ class CodemodSelectorTest {
         assertThat(select(event))
                 .get()
                 .extracting(Codemod::name)
+                .asString()
                 .contains("\"pending\"")
                 .contains("\"waiting\"");
     }
@@ -75,6 +76,7 @@ class CodemodSelectorTest {
         assertThat(select(event))
                 .get()
                 .extracting(Codemod::name)
+                .asString()
                 .contains("\"zip\"")
                 .contains("\"postal_code\"");
     }

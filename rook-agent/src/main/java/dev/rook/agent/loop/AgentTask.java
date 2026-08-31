@@ -11,10 +11,12 @@ public record AgentTask(
         List<ChangeEvent> events,
         ImpactReport report,
         List<MigrationNote> notes,
-        CodeIndex index) {
+        CodeIndex index,
+        String preface) {
 
     public AgentTask {
         events = List.copyOf(events);
         notes = List.copyOf(notes);
+        preface = preface == null ? "" : preface;
     }
 }

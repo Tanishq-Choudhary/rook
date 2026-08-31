@@ -319,8 +319,8 @@ class AgentLoopTest {
                 fixtures().run(model, sandbox, AgentBudget.standard().withToolCallLimits(2, 50));
         assertThat(result.status()).isEqualTo(AgentResult.Status.NO_CHANGES);
         List<ModelMessage> messages = model.requests().get(1).messages();
-        assertThat(messages.get(3).text()).contains("at most 2 tool calls per turn");
-        assertThat(messages.get(3).toolCallId()).isEqualTo("c");
+        assertThat(messages.get(4).text()).contains("at most 2 tool calls per turn");
+        assertThat(messages.get(4).toolCallId()).isEqualTo("c");
     }
 
     @Test

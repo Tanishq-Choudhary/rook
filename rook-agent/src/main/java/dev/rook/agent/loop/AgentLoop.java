@@ -74,7 +74,10 @@ public final class AgentLoop {
         run.messages.add(
                 ModelMessage.user(
                         AgentPrompts.task(
-                                task.repository(), task.events(), task.report().impacts())));
+                                task.repository(),
+                                task.events(),
+                                task.report().impacts(),
+                                task.preface())));
         Instant started = clock.instant();
         for (int iteration = 1; iteration <= budget.maxIterations(); iteration++) {
             Optional<AgentResult.Status> exhausted = exhausted(run, started);

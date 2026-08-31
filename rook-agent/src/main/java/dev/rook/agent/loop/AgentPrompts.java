@@ -27,9 +27,14 @@ final class AgentPrompts {
 
     private AgentPrompts() {}
 
-    static String task(String repository, List<ChangeEvent> events, List<Impact> impacts) {
+    static String task(
+            String repository, List<ChangeEvent> events, List<Impact> impacts, String preface) {
         StringBuilder text = new StringBuilder();
-        text.append("Repository: ").append(repository).append("\n\nUpstream changes:\n");
+        text.append("Repository: ").append(repository).append("\n\n");
+        if (!preface.isEmpty()) {
+            text.append(preface).append("\n\n");
+        }
+        text.append("Upstream changes:\n");
         for (ChangeEvent event : events) {
             text.append("- ")
                     .append(event.severity())
