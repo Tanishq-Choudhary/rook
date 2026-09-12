@@ -72,6 +72,19 @@ public record WorkspacePolicy(
                 maxFileBytes, maxFilesTouched, maxEdits, maxChangedLines, maxCopiedFiles, true);
     }
 
+    public static boolean isBuildFile(String path) {
+        String normalized = normalize(path);
+        return BUILD_FILES.contains(normalized.substring(normalized.lastIndexOf('/') + 1));
+    }
+
+    public static boolean isProtectedFromEdits(String path) {
+        String normalized = normalize(path);
+        if (NEVER_EDIT_FILES.contains(normalized)) {
+            return true;
+        }
+        return NEVER_EDIT_PREFIXES.stream().anyMatch(normalized::startsWith);
+    }
+
     public void checkRead(String path) {
         String normalized = normalize(path);
         if (SensitivePaths.isSensitive(normalized)) {

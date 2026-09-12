@@ -46,7 +46,8 @@ public final class CommandLine {
                             + String.join(", ", new TreeSet<>(EXECUTABLES)));
         }
         for (String token : tokens) {
-            if (FORBIDDEN_FLAGS.contains(token)) {
+            if (FORBIDDEN_FLAGS.contains(token)
+                    || FORBIDDEN_FLAGS.stream().anyMatch(f -> token.startsWith(f + "="))) {
                 throw RookException.invalid("the verify command cannot use " + token);
             }
             if (token.startsWith("-D")

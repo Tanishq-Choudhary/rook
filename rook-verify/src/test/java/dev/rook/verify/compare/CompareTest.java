@@ -7,7 +7,7 @@ import dev.rook.verify.build.TestCaseResult;
 import dev.rook.verify.build.TestCaseResult.Outcome;
 import dev.rook.verify.build.TestReport;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -154,9 +154,9 @@ class CompareTest {
         assertThat(comparison.fixed()).allMatch(id -> before.contains(id) && after.contains(id));
         assertThat(comparison.removed()).allMatch(id -> before.contains(id) && !after.contains(id));
         assertThat(comparison.added()).allMatch(id -> !before.contains(id) && after.contains(id));
-        assertThat(new HashSet<>(comparison.regressions()))
-                .doesNotContainAnyElementsOf(comparison.preExisting())
-                .doesNotContainAnyElementsOf(comparison.fixed());
+        assertThat(Collections.disjoint(comparison.regressions(), comparison.preExisting()))
+                .isTrue();
+        assertThat(Collections.disjoint(comparison.regressions(), comparison.fixed())).isTrue();
     }
 
     @Property
