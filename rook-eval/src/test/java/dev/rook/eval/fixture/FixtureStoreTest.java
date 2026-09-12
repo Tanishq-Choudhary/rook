@@ -138,19 +138,6 @@ class FixtureStoreTest {
                                 new FixtureSpec(
                                         "ok-id", "t", null, null, false, null, null, null, null))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(
-                        () ->
-                                new FixtureSpec(
-                                        "ok-id",
-                                        "t",
-                                        "c",
-                                        null,
-                                        true,
-                                        null,
-                                        List.of(new FixtureSpec.ExpectedLocation("a", 1)),
-                                        null,
-                                        null))
-                .isInstanceOf(IllegalArgumentException.class);
         FixtureSpec defaults =
                 new FixtureSpec("ok-id", "t", "c", null, false, null, null, null, null);
         assertThat(defaults.difficulty()).isEqualTo("easy");

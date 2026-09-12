@@ -35,9 +35,6 @@ public record FixtureSpec(
         expected = expected == null ? List.of() : List.copyOf(expected);
         untouchable = untouchable == null ? List.of() : List.copyOf(untouchable);
         tags = tags == null ? List.of() : List.copyOf(tags);
-        if (noop && !expected.isEmpty()) {
-            throw new IllegalArgumentException("a no-op fixture cannot expect locations");
-        }
     }
 
     public List<String> expectedKeys() {
