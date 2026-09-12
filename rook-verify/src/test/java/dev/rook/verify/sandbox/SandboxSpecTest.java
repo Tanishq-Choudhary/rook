@@ -71,6 +71,21 @@ class SandboxSpecTest {
     }
 
     @Test
+    void tmpfsAreasAreValidated() {
+        assertThat(base().withTmpfs(List.of(new SandboxSpec.Tmpfs("/work", 64))).tmpfs())
+                .hasSize(1);
+        assertThat(base().tmpfs()).isEmpty();
+        assertThatThrownBy(() -> new SandboxSpec.Tmpfs("work", 64))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new SandboxSpec.Tmpfs("/a:b", 64))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new SandboxSpec.Tmpfs("/a/../b", 64))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> new SandboxSpec.Tmpfs("/work", 0))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void mountsNeedAbsoluteSafeContainerPaths() {
         assertThatThrownBy(() -> Mount.readOnly(Path.of("a"), "relative"))
                 .isInstanceOf(IllegalArgumentException.class);

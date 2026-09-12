@@ -50,7 +50,7 @@ class DockerCommandTest {
         assertThat(after(args, "--user")).isEqualTo("1000:1000");
         assertThat(after(args, "--pull")).isEqualTo("never");
         assertThat(after(args, "--entrypoint")).isEmpty();
-        assertThat(after(args, "--tmpfs")).isEqualTo("/tmp:rw,nosuid,size=256m");
+        assertThat(after(args, "--tmpfs")).isEqualTo("/tmp:rw,nosuid,mode=1777,size=256m");
         assertThat(args).contains("nofile=4096:4096", "core=0");
     }
 
@@ -80,6 +80,20 @@ class DockerCommandTest {
                 .anyMatch(a -> a.endsWith("target=/work"))
                 .anyMatch(a -> a.endsWith("target=/cache,readonly"));
         assertThat(after(args, "--workdir")).isEqualTo("/work");
+    }
+
+    @Test
+    void extraTmpfsAreasAreMountedWithTheirSize() {
+        List<String> args =
+                DockerCommand.run(
+                        spec().withTmpfs(List.of(new SandboxSpec.Tmpfs("/work", 512))),
+                        "n",
+                        CONFIG,
+                        1);
+        assertThat(args)
+                .contains(
+                        "/work:rw,nosuid,mode=1777,size=512m",
+                        "/tmp:rw,nosuid,mode=1777,size=256m");
     }
 
     @Test

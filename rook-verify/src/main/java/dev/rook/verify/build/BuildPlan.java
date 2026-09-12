@@ -1,32 +1,37 @@
 package dev.rook.verify.build;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public record BuildPlan(
         String tool,
         String image,
-        List<String> prepareCommand,
+        List<String> warmCommand,
         List<String> testCommand,
-        List<String> descriptorFiles,
         Map<String, String> env,
         Duration timeout) {
 
     public static final String CACHE_PATH = "/cache";
+    public static final String SOURCE_PATH = "/src";
     public static final String WORK_PATH = "/work";
 
     public BuildPlan {
-        prepareCommand = List.copyOf(prepareCommand);
+        warmCommand = List.copyOf(warmCommand);
         testCommand = List.copyOf(testCommand);
-        descriptorFiles = List.copyOf(descriptorFiles);
         env = Map.copyOf(env);
-        if (testCommand.isEmpty()) {
-            throw new IllegalArgumentException("a build plan needs a test command");
+        if (testCommand.isEmpty() || warmCommand.isEmpty()) {
+            throw new IllegalArgumentException("a build plan needs a warm up and a test command");
         }
     }
 
-    public boolean needsPrepare() {
-        return !prepareCommand.isEmpty();
+    public List<String> testCommandFor(String testFilter) {
+        List<String> command = new ArrayList<>(testCommand);
+        if (testFilter != null && !testFilter.isBlank()) {
+            command.add("-Dtest=" + testFilter);
+            command.add("-Dsurefire.failIfNoSpecifiedTests=false");
+        }
+        return command;
     }
 }

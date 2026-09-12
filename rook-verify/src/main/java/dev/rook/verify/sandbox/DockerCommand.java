@@ -27,7 +27,7 @@ final class DockerCommand {
         args.add(spec.network() == NetworkMode.NONE ? "none" : "bridge");
         args.add("--read-only");
         args.add("--tmpfs");
-        args.add("/tmp:rw,nosuid,size=" + config.tmpfsSize());
+        args.add("/tmp:rw,nosuid,mode=1777,size=" + config.tmpfsSize());
         args.add("--cap-drop");
         args.add("ALL");
         args.add("--security-opt");
@@ -62,6 +62,10 @@ final class DockerCommand {
                             args.add("--env");
                             args.add(key + "=" + value);
                         });
+        for (SandboxSpec.Tmpfs area : spec.tmpfs()) {
+            args.add("--tmpfs");
+            args.add(area.path() + ":rw,nosuid,mode=1777,size=" + area.sizeMb() + "m");
+        }
         for (Mount mount : spec.mounts()) {
             String source = mount.host().toAbsolutePath().toString();
             if (source.contains(",") || source.contains("=")) {

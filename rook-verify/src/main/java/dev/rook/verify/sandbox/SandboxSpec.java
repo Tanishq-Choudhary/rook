@@ -17,7 +17,23 @@ public record SandboxSpec(
         NetworkMode network,
         List<Mount> mounts,
         Map<String, String> labels,
-        int maxOutputBytes) {
+        int maxOutputBytes,
+        List<Tmpfs> tmpfs) {
+
+    public record Tmpfs(String path, int sizeMb) {
+
+        public Tmpfs {
+            if (path == null
+                    || !path.startsWith("/")
+                    || path.contains(":")
+                    || path.contains("..")) {
+                throw new IllegalArgumentException("invalid tmpfs path: " + path);
+            }
+            if (sizeMb < 1) {
+                throw new IllegalArgumentException("tmpfs size must be positive");
+            }
+        }
+    }
 
     private static final Pattern ENV_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
     private static final Pattern LABEL_KEY = Pattern.compile("[a-z0-9][a-z0-9._-]*");
@@ -36,6 +52,7 @@ public record SandboxSpec(
         env = Map.copyOf(env);
         mounts = List.copyOf(mounts);
         labels = Map.copyOf(labels);
+        tmpfs = List.copyOf(tmpfs);
         env.keySet()
                 .forEach(
                         name -> {
@@ -53,6 +70,35 @@ public record SandboxSpec(
                         });
     }
 
+    public SandboxSpec(
+            String image,
+            String workdir,
+            List<String> command,
+            Map<String, String> env,
+            Duration timeout,
+            double cpus,
+            int memoryMb,
+            int pids,
+            NetworkMode network,
+            List<Mount> mounts,
+            Map<String, String> labels,
+            int maxOutputBytes) {
+        this(
+                image,
+                workdir,
+                command,
+                env,
+                timeout,
+                cpus,
+                memoryMb,
+                pids,
+                network,
+                mounts,
+                labels,
+                maxOutputBytes,
+                List.of());
+    }
+
     public static SandboxSpec of(String image, String workdir, List<String> command) {
         return new SandboxSpec(
                 image,
@@ -66,15 +112,16 @@ public record SandboxSpec(
                 NetworkMode.NONE,
                 List.of(),
                 Map.of(),
-                256 * 1024);
+                256 * 1024,
+                List.of());
     }
 
-    public SandboxSpec withEnv(Map<String, String> newEnv) {
+    public SandboxSpec withEnv(Map<String, String> value) {
         return new SandboxSpec(
                 image,
                 workdir,
                 command,
-                newEnv,
+                value,
                 timeout,
                 cpus,
                 memoryMb,
@@ -82,23 +129,25 @@ public record SandboxSpec(
                 network,
                 mounts,
                 labels,
-                maxOutputBytes);
+                maxOutputBytes,
+                tmpfs);
     }
 
-    public SandboxSpec withTimeout(Duration newTimeout) {
+    public SandboxSpec withTimeout(Duration value) {
         return new SandboxSpec(
                 image,
                 workdir,
                 command,
                 env,
-                newTimeout,
+                value,
                 cpus,
                 memoryMb,
                 pids,
                 network,
                 mounts,
                 labels,
-                maxOutputBytes);
+                maxOutputBytes,
+                tmpfs);
     }
 
     public SandboxSpec withLimits(double newCpus, int newMemoryMb, int newPids) {
@@ -114,10 +163,11 @@ public record SandboxSpec(
                 network,
                 mounts,
                 labels,
-                maxOutputBytes);
+                maxOutputBytes,
+                tmpfs);
     }
 
-    public SandboxSpec withNetwork(NetworkMode newNetwork) {
+    public SandboxSpec withNetwork(NetworkMode value) {
         return new SandboxSpec(
                 image,
                 workdir,
@@ -127,13 +177,14 @@ public record SandboxSpec(
                 cpus,
                 memoryMb,
                 pids,
-                newNetwork,
+                value,
                 mounts,
                 labels,
-                maxOutputBytes);
+                maxOutputBytes,
+                tmpfs);
     }
 
-    public SandboxSpec withMounts(List<Mount> newMounts) {
+    public SandboxSpec withMounts(List<Mount> value) {
         return new SandboxSpec(
                 image,
                 workdir,
@@ -144,12 +195,13 @@ public record SandboxSpec(
                 memoryMb,
                 pids,
                 network,
-                newMounts,
+                value,
                 labels,
-                maxOutputBytes);
+                maxOutputBytes,
+                tmpfs);
     }
 
-    public SandboxSpec withLabels(Map<String, String> newLabels) {
+    public SandboxSpec withLabels(Map<String, String> value) {
         return new SandboxSpec(
                 image,
                 workdir,
@@ -161,13 +213,31 @@ public record SandboxSpec(
                 pids,
                 network,
                 mounts,
-                newLabels,
-                maxOutputBytes);
+                value,
+                maxOutputBytes,
+                tmpfs);
     }
 
-    public SandboxSpec withMaxOutputBytes(int bytes) {
+    public SandboxSpec withMaxOutputBytes(int value) {
         return new SandboxSpec(
                 image, workdir, command, env, timeout, cpus, memoryMb, pids, network, mounts,
-                labels, bytes);
+                labels, value, tmpfs);
+    }
+
+    public SandboxSpec withTmpfs(List<Tmpfs> value) {
+        return new SandboxSpec(
+                image,
+                workdir,
+                command,
+                env,
+                timeout,
+                cpus,
+                memoryMb,
+                pids,
+                network,
+                mounts,
+                labels,
+                maxOutputBytes,
+                value);
     }
 }

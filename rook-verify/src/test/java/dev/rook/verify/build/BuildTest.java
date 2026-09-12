@@ -38,18 +38,19 @@ class BuildTest {
     }
 
     @Test
-    void aMavenProjectGetsOfflineTestsAndAPrepareStep() throws IOException {
+    void aMavenProjectGetsAWarmUpRunAndOfflineTests() throws IOException {
         write("pom.xml", "<project/>");
-        write("module/pom.xml", "<project/>");
-        write("module/target/pom.xml", "<project/>");
         BuildPlan plan = plan(DEFAULT);
         assertThat(plan.tool()).isEqualTo("maven");
         assertThat(plan.testCommand())
                 .containsExactly(
                         "mvn", "-B", "-ntp", "-o", "test", "-Dmaven.repo.local=/cache/repository");
-        assertThat(plan.needsPrepare()).isTrue();
-        assertThat(plan.prepareCommand()).contains("dependency:go-offline");
-        assertThat(plan.descriptorFiles()).containsExactly("module/pom.xml", "pom.xml");
+        assertThat(plan.warmCommand())
+                .containsExactly(
+                        "mvn", "-B", "-ntp", "test", "-Dmaven.repo.local=/cache/repository");
+        assertThat(plan.testCommandFor("AppTest#one"))
+                .endsWith("-Dtest=AppTest#one", "-Dsurefire.failIfNoSpecifiedTests=false");
+        assertThat(plan.testCommandFor(" ")).isEqualTo(plan.testCommand());
         assertThat(plan.timeout()).isEqualTo(Duration.ofSeconds(600));
         assertThat(plan.env()).containsKey("HOME");
         assertThat(plan.image()).isEqualTo(BuildPlanner.DEFAULT_IMAGE);
@@ -69,7 +70,8 @@ class BuildTest {
                         "-Dmaven.repo.local=/cache/repository");
         assertThat(plan.timeout()).isEqualTo(Duration.ofSeconds(120));
         BuildPlan already = plan(new RookConfig.Verify("mvn --offline test", null));
-        assertThat(already.testCommand()).doesNotContain("-o");
+        assertThat(already.testCommand()).doesNotContain("--offline").containsOnlyOnce("-o");
+        assertThat(already.warmCommand()).doesNotContain("-o", "--offline");
     }
 
     @Test
@@ -321,7 +323,6 @@ class BuildTest {
                                 new BuildPlan(
                                         "maven",
                                         "img",
-                                        List.of(),
                                         List.of(),
                                         List.of(),
                                         Map.of(),
