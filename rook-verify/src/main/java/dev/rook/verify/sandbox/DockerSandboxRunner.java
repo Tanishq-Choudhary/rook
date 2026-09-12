@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,14 +13,15 @@ public final class DockerSandboxRunner implements SandboxRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DockerSandboxRunner.class);
 
+    private static final long WATCH_INTERVAL_MILLIS = 400;
+
     private final DockerConfig config;
     private final Clock clock;
-    private final LocalProcessRunner cli;
+    private final LocalProcessRunner cli = DockerCli.runner();
 
     public DockerSandboxRunner(DockerConfig config, Clock clock) {
         this.config = config;
         this.clock = clock;
-        this.cli = DockerCli.runner();
     }
 
     @Override
@@ -44,13 +46,16 @@ public final class DockerSandboxRunner implements SandboxRunner {
         List<String> command =
                 DockerCommand.run(spec, name, config, clock.instant().getEpochSecond());
         long started = System.nanoTime();
-        SandboxResult attached;
+        AtomicBoolean finished = new AtomicBoolean();
+        AtomicBoolean diskExceeded = new AtomicBoolean();
+        Thread watchdog = watch(spec, name, finished, diskExceeded);
         try {
-            attached =
+            SandboxResult attached =
                     cli.run(
                             SandboxSpec.of("docker-cli", workingDirectory(), command)
                                     .withTimeout(spec.timeout())
                                     .withMaxOutputBytes(spec.maxOutputBytes()));
+            finished.set(true);
             boolean timedOut = attached.timedOut();
             if (timedOut) {
                 kill(name);
@@ -74,9 +79,53 @@ public final class DockerSandboxRunner implements SandboxRunner {
                     attached.outputTruncated(),
                     attached.stdout(),
                     attached.stderr(),
-                    Duration.ofNanos(System.nanoTime() - started));
+                    Duration.ofNanos(System.nanoTime() - started),
+                    diskExceeded.get());
         } finally {
+            finished.set(true);
+            stop(watchdog);
             remove(name);
+        }
+    }
+
+    private Thread watch(
+            SandboxSpec spec, String name, AtomicBoolean finished, AtomicBoolean diskExceeded) {
+        List<Path> writable =
+                spec.mounts().stream().filter(m -> !m.readOnly()).map(Mount::host).toList();
+        if (writable.isEmpty()) {
+            return null;
+        }
+        WorkspaceQuota quota =
+                new WorkspaceQuota(config.maxWorkspaceBytes(), config.maxWorkspaceFiles());
+        return Thread.ofVirtual()
+                .name("sandbox-quota-" + name)
+                .start(
+                        () -> {
+                            while (!finished.get()) {
+                                if (quota.exceeded(writable)) {
+                                    diskExceeded.set(true);
+                                    kill(name);
+                                    return;
+                                }
+                                try {
+                                    Thread.sleep(WATCH_INTERVAL_MILLIS);
+                                } catch (InterruptedException e) {
+                                    Thread.currentThread().interrupt();
+                                    return;
+                                }
+                            }
+                        });
+    }
+
+    private static void stop(Thread watchdog) {
+        if (watchdog == null) {
+            return;
+        }
+        watchdog.interrupt();
+        try {
+            watchdog.join(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

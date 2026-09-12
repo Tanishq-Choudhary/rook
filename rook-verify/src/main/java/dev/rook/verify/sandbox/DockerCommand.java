@@ -21,6 +21,8 @@ final class DockerCommand {
         args.add("--pull");
         args.add(config.pullMissingImages() ? "missing" : "never");
         args.add("--init");
+        args.add("--entrypoint");
+        args.add("");
         args.add("--network");
         args.add(spec.network() == NetworkMode.NONE ? "none" : "bridge");
         args.add("--read-only");

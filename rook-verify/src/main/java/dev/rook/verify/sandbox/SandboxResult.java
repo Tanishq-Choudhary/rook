@@ -9,15 +9,27 @@ public record SandboxResult(
         boolean outputTruncated,
         String stdout,
         String stderr,
-        Duration duration) {
+        Duration duration,
+        boolean diskExceeded) {
 
     public SandboxResult {
         stdout = stdout == null ? "" : stdout;
         stderr = stderr == null ? "" : stderr;
     }
 
+    public SandboxResult(
+            int exitCode,
+            boolean timedOut,
+            boolean oomKilled,
+            boolean outputTruncated,
+            String stdout,
+            String stderr,
+            Duration duration) {
+        this(exitCode, timedOut, oomKilled, outputTruncated, stdout, stderr, duration, false);
+    }
+
     public boolean succeeded() {
-        return exitCode == 0 && !timedOut && !oomKilled;
+        return exitCode == 0 && !timedOut && !oomKilled && !diskExceeded;
     }
 
     public String combinedOutput() {

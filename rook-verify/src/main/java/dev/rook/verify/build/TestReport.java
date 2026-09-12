@@ -1,5 +1,6 @@
 package dev.rook.verify.build;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -7,7 +8,7 @@ import java.util.TreeMap;
 public record TestReport(Map<String, TestCaseResult> cases) {
 
     public TestReport {
-        cases = Map.copyOf(new TreeMap<>(cases));
+        cases = Collections.unmodifiableSortedMap(new TreeMap<>(cases));
     }
 
     public static TestReport empty() {

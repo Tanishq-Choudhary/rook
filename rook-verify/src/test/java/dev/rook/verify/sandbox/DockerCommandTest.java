@@ -49,6 +49,7 @@ class DockerCommandTest {
         assertThat(after(args, "--security-opt")).isEqualTo("no-new-privileges");
         assertThat(after(args, "--user")).isEqualTo("1000:1000");
         assertThat(after(args, "--pull")).isEqualTo("never");
+        assertThat(after(args, "--entrypoint")).isEmpty();
         assertThat(after(args, "--tmpfs")).isEqualTo("/tmp:rw,nosuid,size=256m");
         assertThat(args).contains("nofile=4096:4096", "core=0");
     }
@@ -118,7 +119,12 @@ class DockerCommandTest {
     @Test
     void theReaperPicksOnlyContainersOlderThanTheLimit() {
         String listing =
-                "rook-old 1000\nrook-new 99990\nrook-bad notanumber\nstray\nrook-edge 99900\n";
+                "rook-old|rook.managed=true,rook.started=1000\n"
+                        + "rook-new|rook.started=99990,rook.managed=true\n"
+                        + "rook-bad|rook.started=notanumber\n"
+                        + "stray\n"
+                        + "rook-edge|rook.managed=true,rook.started=99900\n"
+                        + "rook-none|rook.managed=true\n";
         assertThat(DockerReaper.stale(listing, 100_000, Duration.ofSeconds(100)))
                 .containsExactly("rook-old", "rook-edge");
         assertThat(DockerReaper.stale("", 100_000, Duration.ofSeconds(1))).isEmpty();

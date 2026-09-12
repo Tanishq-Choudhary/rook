@@ -5,8 +5,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public final class DockerReaper {
+
+    private static final Pattern STARTED = Pattern.compile("(?:^|,)rook\\.started=(\\d+)(?:,|$)");
 
     private final DockerConfig config;
     private final Clock clock;
@@ -27,7 +31,7 @@ public final class DockerReaper {
                                 "--filter",
                                 "label=" + DockerCommand.MANAGED_LABEL + "=true",
                                 "--format",
-                                "{{.Names}} {{.Label \"" + DockerCommand.STARTED_LABEL + "\"}}"));
+                                "{{.Names}}|{{.Labels}}"));
         if (!listing.succeeded()) {
             return 0;
         }
@@ -41,17 +45,17 @@ public final class DockerReaper {
     static List<String> stale(String listing, long nowEpoch, Duration olderThan) {
         List<String> names = new ArrayList<>();
         for (String line : listing.split("\\R")) {
-            String[] parts = line.strip().split("\\s+");
-            if (parts.length != 2) {
+            int bar = line.indexOf('|');
+            if (bar <= 0) {
                 continue;
             }
-            try {
-                long started = Long.parseLong(parts[1]);
-                if (nowEpoch - started >= olderThan.toSeconds()) {
-                    names.add(parts[0]);
-                }
-            } catch (NumberFormatException e) {
+            Matcher matcher = STARTED.matcher(line.substring(bar + 1).strip());
+            if (!matcher.find()) {
                 continue;
+            }
+            long started = Long.parseLong(matcher.group(1));
+            if (nowEpoch - started >= olderThan.toSeconds()) {
+                names.add(line.substring(0, bar).strip());
             }
         }
         return names;
