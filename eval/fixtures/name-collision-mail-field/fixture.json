@@ -1,0 +1,20 @@
+{
+  "id" : "name-collision-mail-field",
+  "title" : "MailClient.send is renamed next to a local send",
+  "category" : "name-collision",
+  "difficulty" : "medium",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 10
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 14
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 20
+  } ],
+  "untouchable" : [ "src/main/java/app/Ledger.java", "src/main/java/app/Report.java" ],
+  "tags" : [ "mail", "field", "name-collision" ]
+}

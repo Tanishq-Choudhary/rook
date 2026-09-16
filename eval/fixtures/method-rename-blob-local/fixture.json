@@ -1,0 +1,20 @@
+{
+  "id" : "method-rename-blob-local",
+  "title" : "BlobClient.upload is renamed to putObject",
+  "category" : "method-rename",
+  "difficulty" : "easy",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "blob", "local", "method-rename" ]
+}

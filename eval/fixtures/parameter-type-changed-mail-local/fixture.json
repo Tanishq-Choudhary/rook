@@ -1,0 +1,20 @@
+{
+  "id" : "parameter-type-changed-mail-local",
+  "title" : "MailClient.send takes a Ref instead of a String",
+  "category" : "parameter-type-changed",
+  "difficulty" : "hard",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_PARAMETERS_CHANGED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "mail", "local", "parameter-type-changed" ]
+}

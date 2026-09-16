@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-blob-local",
+  "title" : "BlobClient gains listBuckets",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "blob", "local", "unrelated-update" ]
+}

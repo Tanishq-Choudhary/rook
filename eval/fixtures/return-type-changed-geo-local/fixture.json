@@ -1,0 +1,20 @@
+{
+  "id" : "return-type-changed-geo-local",
+  "title" : "GeoClient.lookup returns a Receipt",
+  "category" : "return-type-changed",
+  "difficulty" : "hard",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RETURN_TYPE_CHANGED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "geo", "local", "return-type-changed" ]
+}

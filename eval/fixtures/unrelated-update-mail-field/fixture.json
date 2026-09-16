@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-mail-field",
+  "title" : "MailClient gains listFolders",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "mail", "field", "unrelated-update" ]
+}

@@ -1,0 +1,24 @@
+package app;
+
+import maillib.client.MailClient;
+
+public class Service {
+
+    private final MailClient client;
+
+    public Service(MailClient client) {
+        this.client = client;
+    }
+
+    public String single(String key) {
+        return client.send(key);
+    }
+
+    public String batch(String[] keys) {
+        StringBuilder out = new StringBuilder();
+        for (String key : keys) {
+            out.append(client.send(key)).append(';');
+        }
+        return out.toString();
+    }
+}

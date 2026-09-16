@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-pay-local",
+  "title" : "PayClient gains listCharges",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "pay", "local", "unrelated-update" ]
+}

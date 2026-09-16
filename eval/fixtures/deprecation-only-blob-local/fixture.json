@@ -1,0 +1,20 @@
+{
+  "id" : "deprecation-only-blob-local",
+  "title" : "BlobClient.upload is deprecated for removal",
+  "category" : "deprecation-only",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_DEPRECATED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "blob", "local", "deprecation-only" ]
+}

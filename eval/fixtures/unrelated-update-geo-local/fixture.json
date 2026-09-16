@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-geo-local",
+  "title" : "GeoClient gains listRegions",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "geo", "local", "unrelated-update" ]
+}

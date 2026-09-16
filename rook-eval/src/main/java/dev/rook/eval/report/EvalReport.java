@@ -18,14 +18,12 @@ public record EvalReport(
             List.of(
                     "Fixtures are generated from nine change recipes over four invented SDKs. They are small"
                             + " single module Maven projects, not real customer repositories.",
-                    "Only Java SDK changes read from compiled jars are covered. OpenAPI changes are not part of"
-                            + " this set.",
+                    "Only Java SDK changes read from compiled jars are covered. OpenAPI changes are not part"
+                            + " of this set.",
                     "Verification runs offline Maven on the host with the local process runner. The isolated"
                             + " Docker path is tested separately and is not used for these numbers.",
                     "No model backed strategy was run because no API keys were available. Rows for them are"
-                            + " absent on purpose, not zero.",
-                    "The agent strategy without a model returns what the deterministic codemods produce, so it"
-                            + " matches codemod-only here.");
+                            + " absent on purpose, not zero.");
 
     public EvalReport {
         notRun = List.copyOf(notRun);

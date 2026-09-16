@@ -1,0 +1,26 @@
+{
+  "id" : "class-move-pay-local",
+  "title" : "PayClient moves to paylib.client",
+  "category" : "class-move",
+  "difficulty" : "easy",
+  "noop" : false,
+  "changeKinds" : [ "CLASS_MOVED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 3
+  }, {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 8
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 3
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 8
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 13
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "pay", "local", "class-move" ]
+}
