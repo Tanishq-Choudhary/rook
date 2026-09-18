@@ -18,7 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
-public class ApiKeys {
+public class ApiKeys implements Authenticator {
 
     public record Issued(UUID id, String key, String prefix) {}
 
@@ -87,6 +87,7 @@ public class ApiKeys {
                 .optional();
     }
 
+    @Override
     public Optional<Principal> authenticate(String presented) {
         if (presented == null) {
             return Optional.empty();
