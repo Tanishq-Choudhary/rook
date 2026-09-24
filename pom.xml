@@ -21,6 +21,7 @@
     <module>rook-verify</module>
     <module>rook-eval</module>
     <module>rook-control</module>
+    <module>rook-github</module>
     <module>rook-server</module>
   </modules>
 
@@ -108,6 +109,11 @@
       <dependency>
         <groupId>dev.rook</groupId>
         <artifactId>rook-control</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.rook</groupId>
+        <artifactId>rook-github</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>
