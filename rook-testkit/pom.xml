@@ -20,6 +20,10 @@
   <dependencies>
     <dependency>
       <groupId>dev.rook</groupId>
+      <artifactId>rook-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>dev.rook</groupId>
       <artifactId>rook-db</artifactId>
     </dependency>
     <dependency>

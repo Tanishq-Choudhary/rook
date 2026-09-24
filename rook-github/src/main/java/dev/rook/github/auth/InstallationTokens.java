@@ -6,7 +6,7 @@ import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-public final class InstallationTokens {
+public final class InstallationTokens implements TokenSource {
 
     public record Token(String value, Instant expiresAt) {}
 
@@ -28,6 +28,7 @@ public final class InstallationTokens {
         this.clock = clock;
     }
 
+    @Override
     public String tokenFor(long installationId) {
         Token cached = cache.get(installationId);
         if (usable(cached)) {
@@ -40,6 +41,7 @@ public final class InstallationTokens {
                 .value();
     }
 
+    @Override
     public void forget(long installationId) {
         cache.remove(installationId);
     }
