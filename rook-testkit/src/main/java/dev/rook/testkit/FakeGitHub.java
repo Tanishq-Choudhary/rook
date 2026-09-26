@@ -45,7 +45,8 @@ public final class FakeGitHub implements AutoCloseable {
     private record Repo(
             long id, long installation, String fullName, String defaultBranch, String cloneUrl) {}
 
-    private record Failure(String pathContains, int status, Map<String, String> headers) {}
+    private record Failure(
+            String method, String pathContains, int status, Map<String, String> headers) {}
 
     private static final Pattern PULLS = Pattern.compile("/repos/([^/]+/[^/]+)/pulls");
     private static final Pattern CHECKS = Pattern.compile("/repos/([^/]+/[^/]+)/check-runs");
@@ -96,7 +97,12 @@ public final class FakeGitHub implements AutoCloseable {
 
     public synchronized FakeGitHub failNext(
             String pathContains, int status, Map<String, String> headers) {
-        failures.add(new Failure(pathContains, status, Map.copyOf(headers)));
+        return failNext(null, pathContains, status, headers);
+    }
+
+    public synchronized FakeGitHub failNext(
+            String method, String pathContains, int status, Map<String, String> headers) {
+        failures.add(new Failure(method, pathContains, status, Map.copyOf(headers)));
         return this;
     }
 
@@ -158,7 +164,9 @@ public final class FakeGitHub implements AutoCloseable {
             requests.add(
                     new Request(method, path, query == null ? "" : query, authorization, body));
             failure = failures.peek();
-            if (failure != null && path.contains(failure.pathContains())) {
+            if (failure != null
+                    && path.contains(failure.pathContains())
+                    && (failure.method() == null || failure.method().equals(method))) {
                 failures.poll();
             } else {
                 failure = null;
