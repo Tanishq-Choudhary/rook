@@ -39,7 +39,7 @@ public final class PrBody {
             Map<String, Integer> perFile = new TreeMap<>();
             report.callSites().forEach(site -> perFile.merge(site.file(), 1, Integer::sum));
             body.append(report.callSites().size())
-                    .append(" places in ")
+                    .append(report.callSites().size() == 1 ? " place in " : " places in ")
                     .append(perFile.size())
                     .append(perFile.size() == 1 ? " file.\n\n" : " files.\n\n");
             int shown = 0;

@@ -9,16 +9,10 @@ import dev.rook.control.policy.Decision;
 import dev.rook.control.policy.Policy;
 import dev.rook.control.store.ApprovalStore;
 import dev.rook.core.job.JobState;
+import dev.rook.pipeline.Outcomes;
 import dev.rook.pipeline.PipelineHarness;
 import dev.rook.pipeline.store.ArtifactStore;
 import dev.rook.pipeline.verify.PatchVerifier;
-import dev.rook.verify.build.RunSummary;
-import dev.rook.verify.build.TestCaseResult;
-import dev.rook.verify.build.TestReport;
-import dev.rook.verify.compare.Comparison;
-import dev.rook.verify.compare.FlakeAnalyzer;
-import dev.rook.verify.gate.GateReport;
-import dev.rook.verify.gate.GateResult;
 import dev.rook.verify.run.VerificationOutcome;
 import dev.rook.workflow.JobContext;
 import dev.rook.workflow.JobRunner;
@@ -47,60 +41,8 @@ class VerifyingHandlerIT {
     private JobRunner runner;
     private final List<PatchVerifier.Input> inputs = new ArrayList<>();
     private final List<String> patchedService = new ArrayList<>();
-    private final AtomicReference<VerificationOutcome> outcome = new AtomicReference<>(passing());
-
-    static VerificationOutcome passing() {
-        RunSummary run = tests(false);
-        return new VerificationOutcome(
-                true,
-                null,
-                new GateReport(
-                        List.of(GateResult.pass("compiles"), GateResult.pass("no-regressions"))),
-                run,
-                run,
-                Comparison.compare(run.report(), run.report()),
-                null,
-                true,
-                Duration.ofSeconds(9));
-    }
-
-    static VerificationOutcome failing() {
-        RunSummary baseline = tests(false);
-        RunSummary patched = tests(true);
-        return new VerificationOutcome(
-                false,
-                null,
-                new GateReport(
-                        List.of(
-                                GateResult.fail(
-                                        "no-regressions", "ServiceTest.go started failing"))),
-                baseline,
-                patched,
-                Comparison.compare(baseline.report(), patched.report()),
-                new FlakeAnalyzer.Verdict(List.of("ServiceTest#go"), List.of(), 2),
-                false,
-                Duration.ofSeconds(4));
-    }
-
-    private static RunSummary tests(boolean breakOne) {
-        return new RunSummary(
-                RunSummary.Status.TESTS_RAN,
-                TestReport.of(
-                        List.of(
-                                new TestCaseResult(
-                                        "com.shop.ServiceTest#go",
-                                        TestCaseResult.Outcome.PASSED,
-                                        "",
-                                        0.1),
-                                new TestCaseResult(
-                                        "com.shop.ServiceTest#again",
-                                        breakOne
-                                                ? TestCaseResult.Outcome.FAILED
-                                                : TestCaseResult.Outcome.PASSED,
-                                        breakOne ? "expected 1" : "",
-                                        0.1))),
-                "");
-    }
+    private final AtomicReference<VerificationOutcome> outcome =
+            new AtomicReference<>(Outcomes.passing());
 
     @BeforeEach
     void setUp() {
@@ -205,7 +147,7 @@ class VerifyingHandlerIT {
 
     @Test
     void aFailedVerificationIsDeniedAndTheReasonIsKept() {
-        outcome.set(failing());
+        outcome.set(Outcomes.failing());
         UUID job = jobAtVerifying();
         RunResult result = runner.runOnce("w1");
         assertThat(result.outcome()).isEqualTo(RunResult.Outcome.FINISHED);

@@ -88,7 +88,7 @@ class PrBodyTest {
                         "agent",
                         null);
         String body = PrBody.render(single);
-        assertThat(body).contains("1 places in 1 file.").contains("1 file changed");
+        assertThat(body).contains("1 place in 1 file.").contains("1 file changed");
         assertThat(body).doesNotContain("Job details");
         assertThat(body).doesNotContain("Checks passed").doesNotContain("inconsistently");
     }
