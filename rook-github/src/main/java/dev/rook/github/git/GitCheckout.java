@@ -15,6 +15,7 @@ import java.util.stream.Stream;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
@@ -79,6 +80,17 @@ public final class GitCheckout implements AutoCloseable {
             return git.getRepository().resolve("HEAD").name();
         } catch (IOException e) {
             throw RookException.invalid("the checkout has no head", e);
+        }
+    }
+
+    public void detachAt(String sha) {
+        if (sha == null || !sha.matches("[0-9a-f]{40}")) {
+            throw RookException.invalid("the commit id is not valid");
+        }
+        try {
+            git.checkout().setName(sha).call();
+        } catch (GitAPIException | JGitInternalException e) {
+            throw RookException.invalid("the commit could not be checked out", e);
         }
     }
 

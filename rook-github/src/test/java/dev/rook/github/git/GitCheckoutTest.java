@@ -179,6 +179,37 @@ class GitCheckoutTest {
     }
 
     @Test
+    void aCheckoutCanBePinnedToAnEarlierCommit() throws Exception {
+        String first;
+        try (GitCheckout checkout = open("first")) {
+            first = checkout.headSha();
+        }
+        Path seed = temp.resolve("seed");
+        try (Git git = Git.open(seed.toFile())) {
+            Files.writeString(seed.resolve("src/A.java"), "class A { int later; }\n");
+            git.add().addFilepattern(".").call();
+            PersonIdent owner = new PersonIdent("Owner", "owner@example.test");
+            git.commit()
+                    .setMessage("later")
+                    .setAuthor(owner)
+                    .setCommitter(owner)
+                    .setSign(false)
+                    .call();
+            git.push().setRemote(remoteUrl).add("refs/heads/main:refs/heads/main").call();
+        }
+        try (GitCheckout checkout = open("second")) {
+            assertThat(checkout.headSha()).isNotEqualTo(first);
+            checkout.detachAt(first);
+            assertThat(checkout.headSha()).isEqualTo(first);
+            assertThat(text(checkout.directory().resolve("src/A.java"))).isEqualTo("class A {}\n");
+            assertThatThrownBy(() -> checkout.detachAt("not-a-sha"))
+                    .isInstanceOf(RookException.class);
+            assertThatThrownBy(() -> checkout.detachAt("f".repeat(40)))
+                    .isInstanceOf(RookException.class);
+        }
+    }
+
+    @Test
     void theDefaultBranchCanNeverBePushed() {
         try (GitCheckout checkout = open("work")) {
             assertThatThrownBy(() -> checkout.push("main"))
