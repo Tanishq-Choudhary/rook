@@ -47,6 +47,13 @@ class RepositoryStoreIT {
     }
 
     @Test
+    void anInstallationCanBeLookedUpByItsOwnId() {
+        RepositoryStore.Installation stored = store.upsertInstallation(1002, "acme");
+        assertThat(store.installation(stored.id())).contains(stored);
+        assertThat(store.installation(UUID.randomUUID())).isEmpty();
+    }
+
+    @Test
     void reinstallingReactivatesASuspendedInstallation() {
         RepositoryStore.Installation installation = store.upsertInstallation(1002, "acme");
         store.setInstallationStatus(1002, "SUSPENDED");

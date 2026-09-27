@@ -67,6 +67,17 @@ public class RepositoryStore {
                 .update();
     }
 
+    public Optional<Installation> installation(UUID id) {
+        return jdbc.sql(
+                        """
+                        select id, github_installation_id, account_login, status, created_at
+                        from installation where id = :id
+                        """)
+                .param("id", id)
+                .query(RepositoryStore::installation)
+                .optional();
+    }
+
     public Optional<Installation> findInstallation(long githubInstallationId) {
         return jdbc.sql(
                         """
