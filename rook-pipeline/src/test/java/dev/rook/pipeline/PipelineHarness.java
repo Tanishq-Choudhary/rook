@@ -2,6 +2,8 @@ package dev.rook.pipeline;
 
 import dev.rook.changes.store.ChangeIngestion;
 import dev.rook.control.audit.AuditLog;
+import dev.rook.control.budget.BudgetService;
+import dev.rook.control.store.PolicyStore;
 import dev.rook.core.change.Attr;
 import dev.rook.core.change.ChangeEvent;
 import dev.rook.core.change.ChangeKind;
@@ -73,6 +75,8 @@ public final class PipelineHarness implements AutoCloseable {
     public final ArtifactStore artifacts;
     public final AuditLog audit;
     public final PullRequests pullRequests;
+    public final PolicyStore policies;
+    public final BudgetService budgets;
     public final GitHubRepositoryAccess access;
     public final RepositoryStore.Installation installation;
     public final Path workRoot;
@@ -96,6 +100,8 @@ public final class PipelineHarness implements AutoCloseable {
         artifacts = new ArtifactStore(jdbc);
         audit = new AuditLog(jdbc, tx, clock);
         pullRequests = new PullRequests(jdbc, clock);
+        policies = new PolicyStore(jdbc, tx);
+        budgets = new BudgetService(jdbc, tx, clock, new BudgetService.Caps(10_000_000, 5_000_000));
         installation = repositories.upsertInstallation(1, "acme");
         GitHubClient[] holder = new GitHubClient[1];
         tokens =
