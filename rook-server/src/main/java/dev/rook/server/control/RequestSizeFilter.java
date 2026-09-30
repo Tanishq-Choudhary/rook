@@ -20,45 +20,59 @@ public class RequestSizeFilter extends OncePerRequestFilter {
     }
 
     private final long maxBytes;
+    private final long webhookBytes;
+    private final String webhookPrefix;
     private final MeterRegistry meters;
 
     public RequestSizeFilter(long maxBytes, MeterRegistry meters) {
+        this(maxBytes, maxBytes, "/webhooks/", meters);
+    }
+
+    public RequestSizeFilter(
+            long maxBytes, long webhookBytes, String webhookPrefix, MeterRegistry meters) {
         this.maxBytes = maxBytes;
+        this.webhookBytes = webhookBytes;
+        this.webhookPrefix = webhookPrefix;
         this.meters = meters;
+    }
+
+    private long limitFor(HttpServletRequest request) {
+        return request.getRequestURI().startsWith(webhookPrefix) ? webhookBytes : maxBytes;
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-        if (request.getContentLengthLong() > maxBytes) {
-            reject(response);
+        long limit = limitFor(request);
+        if (request.getContentLengthLong() > limit) {
+            reject(response, limit);
             return;
         }
         try {
-            chain.doFilter(new Limited(request, maxBytes), response);
+            chain.doFilter(new Limited(request, limit), response);
         } catch (ServletException | RuntimeException e) {
             if (causedByTooLarge(e) && !response.isCommitted()) {
-                reject(response);
+                reject(response, limit);
                 return;
             }
             throw e;
         } catch (TooLarge e) {
             if (!response.isCommitted()) {
-                reject(response);
+                reject(response, limit);
                 return;
             }
             throw e;
         }
     }
 
-    private void reject(HttpServletResponse response) throws IOException {
+    private void reject(HttpServletResponse response, long limit) throws IOException {
         meters.counter("rook.http.rejected", "reason", "too_large").increment();
         Problems.write(
                 response,
                 HttpServletResponse.SC_REQUEST_ENTITY_TOO_LARGE,
                 "payload_too_large",
-                "the request body is larger than " + maxBytes + " bytes");
+                "the request body is larger than " + limit + " bytes");
     }
 
     private static boolean causedByTooLarge(Throwable error) {

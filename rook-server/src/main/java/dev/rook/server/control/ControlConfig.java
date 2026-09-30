@@ -75,7 +75,11 @@ public class ControlConfig {
             ControlProperties properties, MeterRegistry meters) {
         FilterRegistrationBean<RequestSizeFilter> bean =
                 new FilterRegistrationBean<>(
-                        new RequestSizeFilter(properties.maxRequestBytes(), meters));
+                        new RequestSizeFilter(
+                                properties.maxRequestBytes(),
+                                properties.maxWebhookBytes(),
+                                properties.webhookPrefix(),
+                                meters));
         bean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
         return bean;
     }
