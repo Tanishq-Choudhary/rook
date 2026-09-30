@@ -202,6 +202,16 @@ class AuditLogIT {
     }
 
     @Test
+    void theNewestEntriesComeFirst() {
+        fill(5);
+        List<AuditLog.Entry> recent = log.recent(3);
+        assertThat(recent).hasSize(3);
+        assertThat(recent.get(0).seq()).isGreaterThan(recent.get(1).seq());
+        assertThat(recent.get(0).data().get("step").asInt()).isEqualTo(4);
+        assertThat(log.recent(100)).hasSize(5);
+    }
+
+    @Test
     void requiredFieldsAreChecked() {
         assertThatThrownBy(() -> log.append(" ", "A", "s", Map.of()))
                 .isInstanceOf(IllegalArgumentException.class);

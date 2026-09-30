@@ -49,16 +49,10 @@ import java.util.random.RandomGenerator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.simple.JdbcClient;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnExpression("!'${rook.github.app-id:}'.isEmpty() and ${rook.workflow.enabled:true}")
 public class PipelineConfig {
-
-    @Bean
-    ArtifactStore artifactStore(JdbcClient jdbc) {
-        return new ArtifactStore(jdbc);
-    }
 
     @Bean
     ApprovalService approvalService(ApprovalStore approvals, JobRepository jobs, AuditLog audit) {

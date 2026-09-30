@@ -74,11 +74,6 @@ public class GitHubConfig {
     }
 
     @Bean
-    PullRequests pullRequests(JdbcClient jdbc, Clock clock) {
-        return new PullRequests(jdbc, clock);
-    }
-
-    @Bean
     RepositoryAccess repositoryAccess(
             RepositoryStore repositories, GitHubClient client, InstallationTokens tokens) {
         return new GitHubRepositoryAccess(repositories, client, tokens);
@@ -115,8 +110,8 @@ public class GitHubConfig {
 
     @Bean
     @ConditionalOnExpression("!'${rook.github.webhook-secret:}'.isEmpty()")
-    WebhookController webhookController(GitHubProperties properties, WebhookProcessor processor) {
-        return new WebhookController(new SignatureVerifier(properties.webhookSecret()), processor);
+    SignatureVerifier signatureVerifier(GitHubProperties properties) {
+        return new SignatureVerifier(properties.webhookSecret());
     }
 
     private static String privateKey(GitHubProperties properties) {

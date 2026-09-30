@@ -110,6 +110,17 @@ public class AuditLog {
                 .list();
     }
 
+    public List<Entry> recent(int limit) {
+        return jdbc.sql(
+                        """
+                        select seq, at, actor, action, subject, data, prev_hash, hash
+                        from audit_log order by seq desc limit :limit
+                        """)
+                .param("limit", limit)
+                .query((rs, row) -> entry(rs))
+                .list();
+    }
+
     public Verification verify() {
         return verify(null);
     }
