@@ -22,7 +22,6 @@ import dev.rook.github.api.GitHubClient;
 import dev.rook.github.publish.PrPublisher;
 import dev.rook.pipeline.access.RepositoryAccess;
 import dev.rook.pipeline.step.AgentStrategyProvider;
-import dev.rook.pipeline.step.ApprovalService;
 import dev.rook.pipeline.step.IndexingHandler;
 import dev.rook.pipeline.step.ProposingHandler;
 import dev.rook.pipeline.step.PublishingHandler;
@@ -37,7 +36,6 @@ import dev.rook.verify.run.PhaseRunner;
 import dev.rook.verify.run.Verifier;
 import dev.rook.verify.sandbox.DockerConfig;
 import dev.rook.verify.sandbox.DockerSandboxRunner;
-import dev.rook.workflow.JobRepository;
 import dev.rook.workflow.repo.RepositoryStore;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -53,11 +51,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnExpression("!'${rook.github.app-id:}'.isEmpty() and ${rook.workflow.enabled:true}")
 public class PipelineConfig {
-
-    @Bean
-    ApprovalService approvalService(ApprovalStore approvals, JobRepository jobs, AuditLog audit) {
-        return new ApprovalService(approvals, jobs, audit);
-    }
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnExpression("!'${rook.role:all}'.equalsIgnoreCase('api')")

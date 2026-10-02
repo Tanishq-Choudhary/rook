@@ -331,6 +331,80 @@ public class JobRepository {
         return Boolean.TRUE.equals(applied);
     }
 
+    public boolean cancel(UUID id, String actor) {
+        Boolean applied =
+                tx.execute(
+                        status -> {
+                            Instant now = clock.instant();
+                            String previous =
+                                    jdbc.sql(
+                                                    "select state from migration_job where id = :id for update")
+                                            .param("id", id)
+                                            .query(String.class)
+                                            .optional()
+                                            .orElse(null);
+                            if (previous == null || JobState.valueOf(previous).isTerminal()) {
+                                return false;
+                            }
+                            jdbc.sql(
+                                            """
+                                            update migration_job set
+                                              state = 'CANCELLED',
+                                              last_error = :reason,
+                                              lease_owner = null,
+                                              lease_expires_at = null,
+                                              fence = fence + 1,
+                                              updated_at = :now,
+                                              finished_at = :now
+                                            where id = :id
+                                            """)
+                                    .param("reason", truncate("cancelled by " + actor))
+                                    .param("now", Timestamp.from(now))
+                                    .param("id", id)
+                                    .update();
+                            appendEvent(
+                                    id,
+                                    "STATE_CHANGED",
+                                    JobState.CANCELLED,
+                                    Map.of("from", previous, "to", "CANCELLED", "actor", actor));
+                            return true;
+                        });
+        return Boolean.TRUE.equals(applied);
+    }
+
+    public boolean requeue(UUID id, String actor) {
+        Boolean applied =
+                tx.execute(
+                        status -> {
+                            Instant now = clock.instant();
+                            int updated =
+                                    jdbc.sql(
+                                                    """
+                                                    update migration_job set
+                                                      state = 'PENDING',
+                                                      attempt = 0,
+                                                      next_run_at = :now,
+                                                      last_error = null,
+                                                      checkpoint = '{}'::jsonb,
+                                                      lease_owner = null,
+                                                      lease_expires_at = null,
+                                                      fence = fence + 1,
+                                                      updated_at = :now,
+                                                      finished_at = null
+                                                    where id = :id and state in ('FAILED', 'DEAD')
+                                                    """)
+                                            .param("now", Timestamp.from(now))
+                                            .param("id", id)
+                                            .update();
+                            if (updated > 0) {
+                                appendEvent(
+                                        id, "REQUEUED", JobState.PENDING, Map.of("actor", actor));
+                            }
+                            return updated > 0;
+                        });
+        return Boolean.TRUE.equals(applied);
+    }
+
     public boolean release(UUID id, long fence) {
         return jdbc.sql(
                                 """

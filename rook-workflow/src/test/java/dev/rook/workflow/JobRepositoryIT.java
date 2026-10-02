@@ -435,4 +435,65 @@ class JobRepositoryIT {
         assertThat(jobs.events(id, cursor, 50)).hasSize(all.size() - 2);
         assertThat(jobs.events(id, 0, 2)).hasSize(2);
     }
+
+    @Test
+    void cancellingStopsAPendingJobAndRecordsWho() {
+        UUID id = fixtures.job(fixtures.repository());
+        assertThat(jobs.cancel(id, "reviewer-1")).isTrue();
+        Job job = jobs.find(id).orElseThrow();
+        assertThat(job.state()).isEqualTo(JobState.CANCELLED);
+        assertThat(job.lastError()).isEqualTo("cancelled by reviewer-1");
+        assertThat(job.finishedAt()).isNotNull();
+        assertThat(jobs.events(id, 0, 10))
+                .extracting(JobEvent::kind)
+                .containsExactly("JOB_CREATED", "STATE_CHANGED");
+        assertThat(jobs.claim("w1", LEASE)).isEmpty();
+        assertThat(jobs.cancel(id, "reviewer-1")).isFalse();
+        assertThat(jobs.cancel(UUID.randomUUID(), "reviewer-1")).isFalse();
+    }
+
+    @Test
+    void cancellingARunningJobFencesTheWorkerThatHoldsIt() {
+        UUID id = fixtures.job(fixtures.repository());
+        Job running = jobs.claim("w1", LEASE).orElseThrow().job();
+        assertThat(jobs.cancel(id, "reviewer-1")).isTrue();
+        assertThat(jobs.heartbeat(id, running.fence(), LEASE)).isFalse();
+        assertThat(
+                        jobs.advance(
+                                id,
+                                running.fence(),
+                                JobState.INDEXING,
+                                JobState.PROPOSING,
+                                Map.of(),
+                                Map.of()))
+                .isFalse();
+        assertThat(jobs.find(id).orElseThrow().state()).isEqualTo(JobState.CANCELLED);
+    }
+
+    @Test
+    void aFailedJobCanBeQueuedAgainFromTheStart() {
+        UUID id = fixtures.job(fixtures.repository());
+        Job running = jobs.claim("w1", LEASE).orElseThrow().job();
+        assertThat(jobs.finish(id, running.fence(), JobState.INDEXING, JobState.FAILED, "boom"))
+                .isTrue();
+        assertThat(jobs.requeue(id, "admin")).isTrue();
+        Job job = jobs.find(id).orElseThrow();
+        assertThat(job.state()).isEqualTo(JobState.PENDING);
+        assertThat(job.attempt()).isZero();
+        assertThat(job.lastError()).isNull();
+        assertThat(job.finishedAt()).isNull();
+        assertThat(job.fence()).isGreaterThan(running.fence());
+        assertThat(jobs.claim("w2", LEASE).orElseThrow().job().id()).isEqualTo(id);
+        assertThat(jobs.events(id, 0, 20)).extracting(JobEvent::kind).contains("REQUEUED");
+    }
+
+    @Test
+    void onlyFailedOrDeadJobsCanBeQueuedAgain() {
+        UUID pending = fixtures.job(fixtures.repository());
+        assertThat(jobs.requeue(pending, "admin")).isFalse();
+        UUID cancelled = fixtures.job(fixtures.repository());
+        jobs.cancel(cancelled, "admin");
+        assertThat(jobs.requeue(cancelled, "admin")).isFalse();
+        assertThat(jobs.requeue(UUID.randomUUID(), "admin")).isFalse();
+    }
 }

@@ -29,6 +29,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(problem.getStatus()).body(problem);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ProblemDetail> handleIllegal(IllegalArgumentException e) {
+        ProblemDetail problem =
+                ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, e.getMessage());
+        problem.setTitle(ErrorCode.INVALID.name());
+        problem.setType(URI.create("urn:rook:error:invalid"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    }
+
     @ExceptionHandler(Exception.class)
     ResponseEntity<ProblemDetail> handleUnexpected(Exception e) {
         String reference = UUID.randomUUID().toString();
