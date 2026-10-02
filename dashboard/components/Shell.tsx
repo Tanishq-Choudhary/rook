@@ -2,7 +2,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { logout } from "@/app/login/actions";
 
-export const NAVIGATION = [{ href: "/", label: "Overview" }];
+export const NAVIGATION = [
+  { href: "/", label: "Overview" },
+  { href: "/jobs", label: "Jobs" },
+];
 
 export function Shell({ children }: { children: ReactNode }) {
   return (
