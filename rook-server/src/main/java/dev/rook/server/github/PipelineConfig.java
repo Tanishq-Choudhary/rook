@@ -53,7 +53,9 @@ import org.springframework.context.annotation.Configuration;
 public class PipelineConfig {
 
     @Configuration(proxyBeanMethods = false)
-    @ConditionalOnExpression("!'${rook.role:all}'.equalsIgnoreCase('api')")
+    @ConditionalOnExpression(
+            "!'${rook.github.app-id:}'.isEmpty() and ${rook.workflow.enabled:true}"
+                    + " and !'${rook.role:all}'.equalsIgnoreCase('api')")
     static class Workers {
 
         @Bean

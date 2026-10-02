@@ -18,3 +18,7 @@ eval/work/
 .DS_Store
 Thumbs.db
 .jqwik-database
+dashboard/test-results/
+dashboard/playwright-report/
+dashboard/tsconfig.tsbuildinfo
+dashboard/.next/

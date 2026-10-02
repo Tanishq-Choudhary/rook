@@ -17,7 +17,6 @@ import dev.rook.core.json.Json;
 import dev.rook.pipeline.verify.PatchVerifier;
 import dev.rook.testkit.FakeGitHub;
 import dev.rook.testkit.TestClock;
-import dev.rook.testkit.TestKafka;
 import dev.rook.verify.build.RunSummary;
 import dev.rook.verify.build.TestCaseResult;
 import dev.rook.verify.build.TestReport;
@@ -54,6 +53,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @AutoConfigureMetrics
@@ -71,6 +71,8 @@ class FullFlowIT {
 
     @Container @ServiceConnection
     static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
+
+    @Container static KafkaContainer kafka = new KafkaContainer("apache/kafka:4.2.1");
 
     static final FakeGitHub GITHUB = new FakeGitHub(TestClock.at("2026-10-01T10:00:00Z"));
     static final Path WORK = tempDirectory();
@@ -90,7 +92,7 @@ class FullFlowIT {
         String key =
                 Base64.getMimeEncoder(64, "\n".getBytes(StandardCharsets.US_ASCII))
                         .encodeToString(generator.generateKeyPair().getPrivate().getEncoded());
-        registry.add("rook.workflow.bootstrap-servers", TestKafka::bootstrapServers);
+        registry.add("rook.workflow.bootstrap-servers", kafka::getBootstrapServers);
         registry.add("rook.github.app-id", () -> "9");
         registry.add(
                 "rook.github.private-key",
