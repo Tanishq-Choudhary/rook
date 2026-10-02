@@ -228,6 +228,50 @@ public class ApiQueries {
                 .optional();
     }
 
+    public long latestEventId() {
+        return jdbc.sql("select coalesce(max(id), 0) from job_event").query(Long.class).single();
+    }
+
+    public List<Dtos.StreamEvent> eventsAfter(UUID installation, long after, int limit) {
+        return jdbc.sql(
+                        """
+                        select e.id, e.job_id, e.at, e.kind, e.state, e.data::text as data
+                        from job_event e
+                          join migration_job j on j.id = e.job_id
+                          join repository r on r.id = j.repository_id
+                        where e.id > :after and (cast(:i as uuid) is null or r.installation_id = :i)
+                        order by e.id limit :limit
+                        """)
+                .param("after", after)
+                .param("i", installation)
+                .param("limit", limit)
+                .query((rs, row) -> streamEvent(rs))
+                .list();
+    }
+
+    public List<Dtos.StreamEvent> jobEventsAfter(UUID jobId, long after, int limit) {
+        return jdbc.sql(
+                        """
+                        select id, job_id, at, kind, state, data::text as data from job_event
+                        where job_id = :job and id > :after order by id limit :limit
+                        """)
+                .param("job", jobId)
+                .param("after", after)
+                .param("limit", limit)
+                .query((rs, row) -> streamEvent(rs))
+                .list();
+    }
+
+    private static Dtos.StreamEvent streamEvent(ResultSet rs) throws SQLException {
+        return new Dtos.StreamEvent(
+                rs.getLong("id"),
+                rs.getObject("job_id", UUID.class),
+                instant(rs, "at"),
+                rs.getString("kind"),
+                rs.getString("state"),
+                Json.tree(rs.getString("data")));
+    }
+
     private RepositoryDto withWatches(RepositoryDto repository) {
         List<String> watches =
                 jdbc.sql(

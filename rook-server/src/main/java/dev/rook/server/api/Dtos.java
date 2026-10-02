@@ -159,4 +159,7 @@ public final class Dtos {
 
     public record AuditVerificationDto(
             boolean intact, long checked, Long firstBadSeq, String problem, String head) {}
+
+    public record StreamEvent(
+            long id, UUID jobId, Instant at, String kind, String state, JsonNode data) {}
 }

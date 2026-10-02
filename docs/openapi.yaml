@@ -1,0 +1,268 @@
+openapi: 3.0.3
+info:
+  title: Rook API
+  version: 0.1.0
+  description: Control plane API for Rook. Every path under /api/v1 needs an API key sent as a bearer token or in X-Api-Key.
+servers:
+  - url: http://localhost:8080
+security:
+  - bearer: []
+paths:
+  /api/v1/installations:
+    get:
+      summary: List the installations the key can see
+      responses:
+        "200": {description: Installations, content: {application/json: {schema: {type: array, items: {$ref: "#/components/schemas/Installation"}}}}}
+        "401": {$ref: "#/components/responses/Problem"}
+  /api/v1/installations/{id}:
+    get:
+      summary: Read one installation
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {description: Installation, content: {application/json: {schema: {$ref: "#/components/schemas/Installation"}}}}
+        "404": {$ref: "#/components/responses/Problem"}
+  /api/v1/repositories:
+    get:
+      summary: List repositories with their watched sources
+      parameters:
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+        - {$ref: "#/components/parameters/Page"}
+        - {$ref: "#/components/parameters/Size"}
+      responses:
+        "200": {description: A page of repositories, content: {application/json: {schema: {$ref: "#/components/schemas/Page"}}}}
+  /api/v1/repositories/{id}:
+    get:
+      summary: Read one repository
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {description: Repository, content: {application/json: {schema: {$ref: "#/components/schemas/Repository"}}}}
+        "404": {$ref: "#/components/responses/Problem"}
+  /api/v1/repositories/{id}/rescan:
+    post:
+      summary: Re-read the default branch and refresh the watched sources
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "503": {$ref: "#/components/responses/Problem"}
+  /api/v1/sources:
+    get:
+      summary: List the upstream sources Rook watches
+      responses:
+        "200": {description: Sources, content: {application/json: {schema: {type: array, items: {$ref: "#/components/schemas/Source"}}}}}
+  /api/v1/change-sets:
+    get:
+      summary: List detected upstream changes, newest first
+      parameters:
+        - {name: source, in: query, schema: {type: string}}
+        - {$ref: "#/components/parameters/Page"}
+        - {$ref: "#/components/parameters/Size"}
+      responses:
+        "200": {description: A page of change sets, content: {application/json: {schema: {$ref: "#/components/schemas/Page"}}}}
+  /api/v1/change-sets/{id}:
+    get:
+      summary: Read a change set with its events and migration notes
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {description: Change set, content: {application/json: {schema: {$ref: "#/components/schemas/ChangeSetDetail"}}}}
+        "404": {$ref: "#/components/responses/Problem"}
+  /api/v1/change-sets/{id}/replay:
+    post:
+      summary: Publish a change set again so every watching repository gets a job
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {description: Number of republished messages}
+        "403": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs:
+    get:
+      summary: List migration jobs
+      parameters:
+        - {name: state, in: query, schema: {type: string}}
+        - {name: repository, in: query, schema: {type: string, format: uuid}}
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+        - {$ref: "#/components/parameters/Page"}
+        - {$ref: "#/components/parameters/Size"}
+      responses:
+        "200": {description: A page of jobs, content: {application/json: {schema: {$ref: "#/components/schemas/Page"}}}}
+        "400": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs/{id}:
+    get:
+      summary: Read a job with its timeline, impact, proposal, verification, policy decision, approval and pull request
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {description: Job detail, content: {application/json: {schema: {$ref: "#/components/schemas/JobDetail"}}}}
+        "404": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs/{id}/approve:
+    post:
+      summary: Approve a job that is waiting for a reviewer
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      requestBody: {$ref: "#/components/requestBodies/Note"}
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "409": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs/{id}/reject:
+    post:
+      summary: Reject a job that is waiting for a reviewer
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      requestBody: {$ref: "#/components/requestBodies/Note"}
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "409": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs/{id}/cancel:
+    post:
+      summary: Cancel a job that has not finished
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "409": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs/{id}/retry:
+    post:
+      summary: Queue a failed or dead job again from the start
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "409": {$ref: "#/components/responses/Problem"}
+  /api/v1/jobs/{id}/events:
+    get:
+      summary: Stream the events of one job, resuming after Last-Event-ID
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {description: Server sent events, content: {text/event-stream: {schema: {type: string}}}}
+  /api/v1/events:
+    get:
+      summary: Stream live job events for the installation of the key
+      responses:
+        "200": {description: Server sent events, content: {text/event-stream: {schema: {type: string}}}}
+        "429": {$ref: "#/components/responses/Problem"}
+  /api/v1/usage:
+    get:
+      summary: Spend for the current month
+      parameters:
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+      responses:
+        "200": {description: Usage, content: {application/json: {schema: {$ref: "#/components/schemas/Usage"}}}}
+  /api/v1/policies/effective:
+    get:
+      summary: The policy that applies to an installation or repository
+      parameters:
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+        - {name: repository, in: query, schema: {type: string, format: uuid}}
+      responses:
+        "200": {description: Policy with its version}
+  /api/v1/policies:
+    put:
+      summary: Save a new version of a policy
+      parameters:
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+        - {name: repository, in: query, schema: {type: string, format: uuid}}
+      requestBody: {required: true, content: {application/json: {schema: {type: object}}}}
+      responses:
+        "200": {description: Stored policy}
+        "400": {$ref: "#/components/responses/Problem"}
+  /api/v1/budgets:
+    put:
+      summary: Set the monthly and per job spend caps
+      parameters:
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+      requestBody: {required: true, content: {application/json: {schema: {type: object}}}}
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "400": {$ref: "#/components/responses/Problem"}
+  /api/v1/audit:
+    get:
+      summary: Read the audit trail
+      parameters:
+        - {name: subject, in: query, schema: {type: string}}
+        - {name: limit, in: query, schema: {type: integer}}
+      responses:
+        "200": {description: Audit entries, newest first when no subject is given}
+        "403": {$ref: "#/components/responses/Problem"}
+  /api/v1/audit/verify:
+    get:
+      summary: Recompute the audit hash chain
+      responses:
+        "200": {description: Verification result}
+  /api/v1/api-keys:
+    get:
+      summary: List API keys
+      parameters:
+        - {name: installation, in: query, schema: {type: string, format: uuid}}
+      responses:
+        "200": {description: Keys without their secrets}
+    post:
+      summary: Create an API key, the secret is only shown in this response
+      requestBody: {required: true, content: {application/json: {schema: {type: object}}}}
+      responses:
+        "201": {description: Created key}
+        "403": {$ref: "#/components/responses/Problem"}
+  /api/v1/api-keys/{id}:
+    delete:
+      summary: Revoke an API key
+      parameters: [{$ref: "#/components/parameters/Id"}]
+      responses:
+        "200": {$ref: "#/components/responses/Action"}
+        "404": {$ref: "#/components/responses/Problem"}
+  /webhooks/github:
+    post:
+      summary: Receive GitHub App webhooks, checked with X-Hub-Signature-256
+      security: []
+      responses:
+        "200": {description: Outcome of the delivery}
+        "401": {$ref: "#/components/responses/Problem"}
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+    Page: {name: page, in: query, schema: {type: integer, minimum: 0}}
+    Size: {name: size, in: query, schema: {type: integer, minimum: 1, maximum: 100}}
+  requestBodies:
+    Note:
+      required: false
+      content: {application/json: {schema: {type: object, properties: {note: {type: string}}}}}
+  responses:
+    Action:
+      description: Result of an action
+      content: {application/json: {schema: {type: object, properties: {result: {type: string}}}}}
+    Problem:
+      description: Problem details
+      content: {application/problem+json: {schema: {$ref: "#/components/schemas/Problem"}}}
+  schemas:
+    Problem:
+      type: object
+      properties: {type: {type: string}, title: {type: string}, status: {type: integer}, detail: {type: string}}
+    Page:
+      type: object
+      properties:
+        items: {type: array, items: {type: object}}
+        page: {type: integer}
+        size: {type: integer}
+        total: {type: integer}
+    Installation:
+      type: object
+      properties: {id: {type: string}, githubInstallationId: {type: integer}, accountLogin: {type: string}, status: {type: string}, createdAt: {type: string}}
+    Repository:
+      type: object
+      properties: {id: {type: string}, installationId: {type: string}, fullName: {type: string}, defaultBranch: {type: string}, enabled: {type: boolean}, lastIndexedSha: {type: string}, watches: {type: array, items: {type: string}}}
+    Source:
+      type: object
+      properties: {id: {type: string}, kind: {type: string}, displayName: {type: string}, location: {type: string}, lastVersion: {type: string}, enabled: {type: boolean}}
+    ChangeSetDetail:
+      type: object
+      properties: {changeSet: {type: object}, events: {type: array, items: {type: object}}, notes: {type: array, items: {type: object}}}
+    JobDetail:
+      type: object
+      properties:
+        job: {type: object}
+        timeline: {type: array, items: {type: object}}
+        impact: {type: object}
+        proposal: {type: object}
+        verification: {type: object}
+        policy: {type: object}
+        approval: {type: object}
+        pullRequest: {type: object}
+        spendMicros: {type: integer}
+    Usage:
+      type: object
+      properties: {monthStart: {type: string}, spentMicros: {type: integer}, reservedMicros: {type: integer}, monthlyCapMicros: {type: integer}, remainingMicros: {type: integer}, modelMicros: {type: integer}, sandboxMicros: {type: integer}}
