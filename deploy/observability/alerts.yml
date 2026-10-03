@@ -1,0 +1,92 @@
+groups:
+  - name: rook-workflow
+    rules:
+      - alert: RookOutboxStuck
+        expr: rook_outbox_oldest_age_seconds > 120
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: The oldest outbox message has waited more than two minutes
+          description: The relay is not publishing. Check the relay leader and Kafka.
+
+      - alert: RookNoRelayLeader
+        expr: sum(rook_outbox_relay_leader) == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: No instance holds the outbox relay lock
+
+      - alert: RookNoWorkersAlive
+        expr: sum(rook_workers_alive) == 0
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: No worker thread is running
+
+      - alert: RookDeadLettersOpen
+        expr: rook_dead_letters_open > 0
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: Messages are sitting in the dead letter table
+
+      - alert: RookStepFailureRate
+        expr: |
+          sum(rate(rook_job_steps_total{outcome=~"failed|dead"}[10m]))
+            / clamp_min(sum(rate(rook_job_steps_total[10m])), 0.001) > 0.2
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: More than a fifth of job steps are failing
+
+      - alert: RookLeasesLost
+        expr: sum(increase(rook_job_lease_lost_total[15m])) > 3
+        labels:
+          severity: ticket
+        annotations:
+          summary: Workers keep losing their leases
+          description: Steps are running longer than the lease or workers are stalling.
+
+      - alert: RookStepsSlow
+        expr: |
+          histogram_quantile(0.95, sum by (le, state) (rate(rook_job_step_duration_seconds_bucket[10m]))) > 300
+        for: 10m
+        labels:
+          severity: ticket
+        annotations:
+          summary: The slowest five percent of steps take more than five minutes
+
+  - name: rook-sources
+    rules:
+      - alert: RookSourcePollsFailing
+        expr: |
+          sum by (kind) (rate(rook_source_polls_total{outcome="failed"}[30m]))
+            / clamp_min(sum by (kind) (rate(rook_source_polls_total[30m])), 0.001) > 0.5
+        for: 30m
+        labels:
+          severity: ticket
+        annotations:
+          summary: Most polls of one source kind are failing
+
+  - name: rook-edge
+    rules:
+      - alert: RookAuthRejectionsSpike
+        expr: sum(rate(rook_http_rejected_total{reason!="rate_limited"}[5m])) > 5
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: Many requests are being turned away for missing or bad credentials
+
+      - alert: RookRateLimitingActive
+        expr: sum(rate(rook_http_rejected_total{reason="rate_limited"}[5m])) > 1
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: Clients are being rate limited
