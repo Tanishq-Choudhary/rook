@@ -5,6 +5,8 @@ import { logout } from "@/app/login/actions";
 export const NAVIGATION = [
   { href: "/", label: "Overview" },
   { href: "/jobs", label: "Jobs" },
+  { href: "/changes", label: "Changes" },
+  { href: "/repositories", label: "Repositories" },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {

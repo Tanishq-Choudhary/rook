@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ActionBar } from "@/components/ActionBar";
 import { DiffViewer } from "@/components/DiffViewer";
+import { ImpactGraph } from "@/components/ImpactGraph";
 import { ImpactList } from "@/components/ImpactList";
 import { PolicyPanel } from "@/components/PolicyPanel";
 import { Empty, Section } from "@/components/Section";
@@ -61,7 +62,14 @@ export default async function JobPage({
       ) : null}
       <ActionBar id={job.id} state={job.state} />
       <Section title="Impact">
-        {detail.impact ? <ImpactList impact={detail.impact} /> : <Empty>The repository has not been analysed yet.</Empty>}
+        {detail.impact ? (
+          <div className="space-y-6">
+            <ImpactGraph impact={detail.impact} />
+            <ImpactList impact={detail.impact} />
+          </div>
+        ) : (
+          <Empty>The repository has not been analysed yet.</Empty>
+        )}
       </Section>
       <Section
         title="Proposed change"

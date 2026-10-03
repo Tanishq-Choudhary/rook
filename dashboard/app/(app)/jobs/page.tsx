@@ -10,20 +10,24 @@ import type { JobSummary, Page } from "@/lib/types";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Jobs" };
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default async function JobsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ state?: string; page?: string }>;
+  searchParams: Promise<{ state?: string; page?: string; repository?: string }>;
 }) {
-  const { state, page } = await searchParams;
+  const { state, page, repository } = await searchParams;
+  const scoped = repository && UUID.test(repository) ? repository : undefined;
   const selected = state && ALL_STATES.includes(state) ? state : undefined;
   const number = Math.max(0, Number(page ?? 0) || 0);
-  const jobs = await api<Page<JobSummary>>(`/api/v1/jobs${query({ state: selected, page: number, size: 20 })}`);
+  const jobs = await api<Page<JobSummary>>(`/api/v1/jobs${query({ state: selected, repository: scoped, page: number, size: 20 })}`);
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">Jobs</h1>
         <form method="get" className="flex items-end gap-2">
+          {scoped ? <input type="hidden" name="repository" value={scoped} /> : null}
           <div className="space-y-1">
             <label htmlFor="state" className="block text-xs text-muted">
               State
@@ -88,7 +92,7 @@ export default async function JobsPage({
           </table>
         )}
       </Section>
-      <Pager page={jobs} path="/jobs" params={{ state: selected }} />
+      <Pager page={jobs} path="/jobs" params={{ state: selected, repository: scoped }} />
     </div>
   );
 }
