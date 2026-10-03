@@ -7,6 +7,10 @@ export const NAVIGATION = [
   { href: "/jobs", label: "Jobs" },
   { href: "/changes", label: "Changes" },
   { href: "/repositories", label: "Repositories" },
+  { href: "/policies", label: "Policies" },
+  { href: "/usage", label: "Usage" },
+  { href: "/audit", label: "Audit" },
+  { href: "/evaluation", label: "Evaluation" },
 ];
 
 export function Shell({ children }: { children: ReactNode }) {

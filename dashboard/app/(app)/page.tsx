@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LiveFeed } from "@/components/LiveFeed";
 import { Empty, Section } from "@/components/Section";
 import { StateBadge } from "@/components/StateBadge";
 import { api, query } from "@/lib/api";
@@ -50,6 +51,9 @@ export default async function OverviewPage() {
           </p>
         </Section>
       ) : null}
+      <Section title="Live activity">
+        <LiveFeed />
+      </Section>
       <Section title="Recent jobs" aside={<Link href="/jobs" className="text-sm text-accent">All jobs</Link>}>
         {recent.items.length === 0 ? (
           <Empty>No jobs yet. They appear when a watched source changes.</Empty>
