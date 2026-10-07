@@ -372,6 +372,39 @@
           "legendFormat": "streams"
         }
       ]
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Verifications and their duration",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (result) (rate(rook_verifications_total[15m])) * 60",
+          "legendFormat": "{{result}} per minute"
+        },
+        {
+          "refId": "B",
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(rook_verification_duration_seconds_bucket[15m])))",
+          "legendFormat": "p95 seconds"
+        }
+      ]
     }
   ]
 }

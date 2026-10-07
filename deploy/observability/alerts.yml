@@ -61,6 +61,16 @@ groups:
         annotations:
           summary: The slowest five percent of steps take more than five minutes
 
+  - name: rook-verification
+    rules:
+      - alert: RookVerificationErrors
+        expr: sum(increase(rook_verifications_total{result="error"}[30m])) > 2
+        labels:
+          severity: ticket
+        annotations:
+          summary: The sandbox is failing to run verifications
+          description: Check that Docker is reachable and the Maven image is present.
+
   - name: rook-sources
     rules:
       - alert: RookSourcePollsFailing

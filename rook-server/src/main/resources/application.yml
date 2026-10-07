@@ -32,6 +32,14 @@ management:
     health:
       probes:
         enabled: true
+  tracing:
+    sampling:
+      probability: ${ROOK_TRACE_SAMPLE:0.0}
+  opentelemetry:
+    tracing:
+      export:
+        otlp:
+          endpoint: ${ROOK_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
   metrics:
     tags:
       application: rook

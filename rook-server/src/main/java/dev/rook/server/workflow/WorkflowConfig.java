@@ -13,7 +13,9 @@ import dev.rook.workflow.outbox.RelayConfig;
 import dev.rook.workflow.outbox.RelayMetrics;
 import dev.rook.workflow.repo.RepositoryStore;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.observation.ObservationRegistry;
 import java.time.Clock;
+import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -130,9 +132,14 @@ public class WorkflowConfig {
         WorkerRuntime workerRuntime(
                 JobRepository jobs,
                 ObjectProvider<StepHandler> handlers,
+                ObservationRegistry observations,
                 WorkflowProperties properties,
                 WorkflowMetrics metrics) {
-            return new WorkerRuntime(jobs, handlers.orderedStream().toList(), properties, metrics);
+            List<StepHandler> observed =
+                    handlers.orderedStream()
+                            .<StepHandler>map(h -> new ObservedStepHandler(h, observations))
+                            .toList();
+            return new WorkerRuntime(jobs, observed, properties, metrics);
         }
 
         @Bean

@@ -37,6 +37,7 @@ import dev.rook.verify.run.Verifier;
 import dev.rook.verify.sandbox.DockerConfig;
 import dev.rook.verify.sandbox.DockerSandboxRunner;
 import dev.rook.workflow.repo.RepositoryStore;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
@@ -64,12 +65,15 @@ public class PipelineConfig {
         }
 
         @Bean
-        PatchVerifier patchVerifier(PhaseRunner phases, PipelineProperties properties) {
-            return new DockerPatchVerifier(
-                    new Verifier(phases, new Gates()),
-                    Path.of(properties.cacheDir()),
-                    properties.mavenImage(),
-                    properties.flakeReruns());
+        PatchVerifier patchVerifier(
+                PhaseRunner phases, PipelineProperties properties, MeterRegistry meters) {
+            return new MeteredPatchVerifier(
+                    new DockerPatchVerifier(
+                            new Verifier(phases, new Gates()),
+                            Path.of(properties.cacheDir()),
+                            properties.mavenImage(),
+                            properties.flakeReruns()),
+                    meters);
         }
 
         @Bean
