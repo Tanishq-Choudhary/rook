@@ -22,3 +22,4 @@ dashboard/test-results/
 dashboard/playwright-report/
 dashboard/tsconfig.tsbuildinfo
 dashboard/.next/
+deploy/terraform/.terraform.lock.hcl

@@ -35,6 +35,10 @@ management:
   tracing:
     sampling:
       probability: ${ROOK_TRACE_SAMPLE:0.0}
+  otlp:
+    metrics:
+      export:
+        enabled: false
   opentelemetry:
     tracing:
       export:

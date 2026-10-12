@@ -18,6 +18,7 @@ import dev.rook.control.budget.BudgetService;
 import dev.rook.control.store.ApprovalStore;
 import dev.rook.control.store.PolicyStore;
 import dev.rook.core.error.RookException;
+import dev.rook.core.random.SharedRandom;
 import dev.rook.github.api.GitHubClient;
 import dev.rook.github.publish.PrPublisher;
 import dev.rook.pipeline.access.RepositoryAccess;
@@ -44,7 +45,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.random.RandomGenerator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -114,7 +114,7 @@ public class PipelineConfig {
                     Duration.ofMillis(500),
                     Duration.ofSeconds(8),
                     duration -> Thread.sleep(duration),
-                    RandomGenerator.of("L64X128MixRandom"));
+                    SharedRandom.get());
         }
 
         @Bean

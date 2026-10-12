@@ -1,0 +1,80 @@
+#!/bin/bash
+set -euo pipefail
+
+dnf install -y docker
+systemctl enable --now docker
+mkdir -p /usr/local/lib/docker/cli-plugins
+curl -fsSL https://github.com/docker/compose/releases/download/v2.39.1/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+while [ ! -e /dev/sdf ] && [ ! -e /dev/nvme1n1 ]; do sleep 2; done
+device=$(ls /dev/nvme1n1 /dev/sdf 2>/dev/null | head -1)
+blkid "$device" || mkfs.xfs "$device"
+mkdir -p /var/lib/rook
+grep -q /var/lib/rook /etc/fstab || echo "$device /var/lib/rook xfs defaults,nofail 0 2" >> /etc/fstab
+mount -a
+mkdir -p /var/lib/rook/work /var/lib/rook/cache /var/lib/rook/kafka
+chown -R 1000:1000 /var/lib/rook
+chmod 777 /var/lib/rook/kafka
+
+aws ecr get-login-password --region ${region} | docker login --username AWS --password-stdin ${registry}
+
+mkdir -p /opt/rook
+cat > /opt/rook/.env <<ENV
+ROOK_DB_URL=${database_url}
+ROOK_DB_PASSWORD=${database_pass}
+ROOK_CONTROL_BOOTSTRAP_KEY=${admin_key}
+ROOK_GITHUB_APP_ID=${github_app_id}
+ENV
+chmod 600 /opt/rook/.env
+
+cat > /opt/rook/compose.yml <<COMPOSE
+name: rook
+services:
+  kafka:
+    image: apache/kafka:4.2.1
+    hostname: kafka
+    restart: always
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:29092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    volumes:
+      - /var/lib/rook/kafka:/var/lib/kafka/data
+  server:
+    image: ${server_image}
+    restart: always
+    depends_on:
+      - kafka
+    env_file: /opt/rook/.env
+    environment:
+      ROOK_KAFKA_BOOTSTRAP: kafka:29092
+      ROOK_DB_USER: rook
+      ROOK_PIPELINE_WORK_DIR: /var/lib/rook/work
+      ROOK_PIPELINE_CACHE_DIR: /var/lib/rook/cache
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/rook:/var/lib/rook
+    group_add:
+      - "$(getent group docker | cut -d: -f3)"
+    ports:
+      - "8080:8080"
+  dashboard:
+    image: ${dashboard_image}
+    restart: always
+    environment:
+      ROOK_API_URL: http://server:8080
+    ports:
+      - "3001:3000"
+COMPOSE
+
+docker compose -f /opt/rook/compose.yml up -d

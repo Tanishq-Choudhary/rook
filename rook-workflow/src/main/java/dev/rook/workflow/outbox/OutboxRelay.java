@@ -2,6 +2,7 @@ package dev.rook.workflow.outbox;
 
 import dev.rook.core.id.Ids;
 import dev.rook.core.json.Json;
+import dev.rook.core.random.SharedRandom;
 import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -41,7 +42,7 @@ public class OutboxRelay implements AutoCloseable {
     private final Clock clock;
     private final RelayConfig config;
     private final RelayMetrics metrics;
-    private final RandomGenerator random = RandomGenerator.of("L64X128MixRandom");
+    private final RandomGenerator random = SharedRandom.get();
     private volatile boolean running;
     private Thread loop;
 

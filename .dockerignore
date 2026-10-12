@@ -1,0 +1,9 @@
+**/target
+**/node_modules
+dashboard/.next
+dashboard/test-results
+dashboard/playwright-report
+eval/work
+.git
+.idea
+.vscode
