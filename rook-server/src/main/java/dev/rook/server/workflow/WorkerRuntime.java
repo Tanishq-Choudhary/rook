@@ -58,6 +58,21 @@ public class WorkerRuntime implements AutoCloseable {
         return pool == null ? 0 : pool.alive().size();
     }
 
+    public int crash(int count) {
+        if (pool == null) {
+            return 0;
+        }
+        int crashed = 0;
+        for (String id : pool.alive()) {
+            if (crashed >= count) {
+                break;
+            }
+            pool.crash(id);
+            crashed++;
+        }
+        return crashed;
+    }
+
     void start() {
         if (pool != null) {
             pool.start();

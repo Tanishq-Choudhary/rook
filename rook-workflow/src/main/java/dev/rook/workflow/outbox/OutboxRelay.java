@@ -202,6 +202,10 @@ public class OutboxRelay implements AutoCloseable {
                 "outbox message {} not published (attempt {}): {}", pending.id(), attempts, reason);
     }
 
+    public boolean running() {
+        return running;
+    }
+
     public synchronized void start() {
         if (running) {
             return;
