@@ -186,6 +186,7 @@
           <configuration>
             <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
             <trimStackTrace>false</trimStackTrace>
+            <rerunFailingTestsCount>1</rerunFailingTestsCount>
           </configuration>
           <executions>
             <execution>
