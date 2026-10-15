@@ -36,6 +36,7 @@ import dev.rook.verify.run.DockerSandboxPort;
 import dev.rook.verify.run.PhaseRunner;
 import dev.rook.verify.run.Verifier;
 import dev.rook.verify.sandbox.DockerConfig;
+import dev.rook.verify.sandbox.DockerReaper;
 import dev.rook.verify.sandbox.DockerSandboxRunner;
 import dev.rook.workflow.repo.RepositoryStore;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -62,6 +63,14 @@ public class PipelineConfig {
         @Bean
         PhaseRunner phaseRunner(Clock clock) {
             return new PhaseRunner(new DockerSandboxRunner(DockerConfig.standard(), clock));
+        }
+
+        @Bean
+        SandboxReaperJob sandboxReaperJob(
+                Clock clock, PipelineProperties properties, MeterRegistry meters) {
+            DockerReaper reaper = new DockerReaper(DockerConfig.standard(), clock);
+            return new SandboxReaperJob(
+                    reaper::reap, properties.reapEvery(), properties.reapAfter(), meters);
         }
 
         @Bean
