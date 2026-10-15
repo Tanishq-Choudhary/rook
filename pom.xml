@@ -24,6 +24,7 @@
     <module>rook-github</module>
     <module>rook-pipeline</module>
     <module>rook-server</module>
+    <module>rook-loadtest</module>
   </modules>
 
   <properties>
@@ -126,6 +127,11 @@
       <dependency>
         <groupId>dev.rook</groupId>
         <artifactId>rook-pipeline</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>dev.rook</groupId>
+        <artifactId>rook-loadtest</artifactId>
         <version>${project.version}</version>
       </dependency>
     </dependencies>

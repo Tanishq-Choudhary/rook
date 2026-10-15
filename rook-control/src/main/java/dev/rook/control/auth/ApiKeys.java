@@ -8,6 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.EnumSet;
 import java.util.List;
@@ -36,6 +38,7 @@ public class ApiKeys implements Authenticator {
             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final String DECOY_HASH = Hashes.sha256Hex("no such key");
     private static final int MINIMUM_BOOTSTRAP_LENGTH = 32;
+    private static final Duration TOUCH_INTERVAL = Duration.ofMinutes(1);
 
     private final JdbcClient jdbc;
     private final Clock clock;
@@ -140,29 +143,43 @@ public class ApiKeys implements Authenticator {
     private Optional<Principal> check(String prefix, String presentedHash) {
         Optional<StoredKey> stored =
                 jdbc.sql(
-                                "select id, installation_id, name, scopes, hash, revoked_at from api_key"
-                                        + " where prefix = :prefix")
+                                "select id, installation_id, name, scopes, hash, revoked_at, last_used_at"
+                                        + " from api_key where prefix = :prefix")
                         .param("prefix", prefix)
                         .query(
                                 (rs, row) ->
                                         new StoredKey(
                                                 principal(rs),
                                                 rs.getString("hash"),
-                                                rs.getTimestamp("revoked_at") != null))
+                                                rs.getTimestamp("revoked_at") != null,
+                                                rs.getTimestamp("last_used_at")))
                         .optional();
         String expected = stored.map(StoredKey::hash).orElse(DECOY_HASH);
         boolean match = Hashes.constantTimeEquals(expected, presentedHash);
         if (stored.isEmpty() || !match || stored.get().revoked()) {
             return Optional.empty();
         }
-        jdbc.sql("update api_key set last_used_at = :now where id = :id")
-                .param("now", Timestamp.from(clock.instant()))
-                .param("id", stored.get().principal().keyId())
-                .update();
+        touch(stored.get());
         return Optional.of(stored.get().principal());
     }
 
-    private record StoredKey(Principal principal, String hash, boolean revoked) {}
+    private void touch(StoredKey key) {
+        Instant now = clock.instant();
+        if (key.lastUsed() != null
+                && key.lastUsed().toInstant().isAfter(now.minus(TOUCH_INTERVAL))) {
+            return;
+        }
+        jdbc.sql(
+                        "update api_key set last_used_at = :now where id = :id"
+                                + " and (last_used_at is null or last_used_at < :cutoff)")
+                .param("now", Timestamp.from(now))
+                .param("cutoff", Timestamp.from(now.minus(TOUCH_INTERVAL)))
+                .param("id", key.principal().keyId())
+                .update();
+    }
+
+    private record StoredKey(
+            Principal principal, String hash, boolean revoked, Timestamp lastUsed) {}
 
     private void insert(
             UUID installationId, String name, String prefix, String hash, Set<Scope> scopes) {

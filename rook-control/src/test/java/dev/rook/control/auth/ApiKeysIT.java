@@ -5,10 +5,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.rook.control.store.ControlFixtures;
 import dev.rook.core.id.Ids;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -142,6 +147,43 @@ class ApiKeysIT {
                                 .query(Boolean.class)
                                 .single())
                 .isTrue();
+    }
+
+    private Timestamp lastUsed(UUID id) {
+        return fixtures.jdbc
+                .sql("select last_used_at from api_key where id = :id")
+                .param("id", id)
+                .query(Timestamp.class)
+                .single();
+    }
+
+    @Test
+    void theLastUsedTimeIsOnlyRewrittenOncePerMinute() {
+        ApiKeys.Issued issued = keys.issue(installation, "ci", EnumSet.of(Scope.READ));
+        keys.authenticate(issued.key());
+        Timestamp first = lastUsed(issued.id());
+
+        fixtures.clock.advance(Duration.ofSeconds(30));
+        keys.authenticate(issued.key());
+        assertThat(lastUsed(issued.id())).isEqualTo(first);
+
+        fixtures.clock.advance(Duration.ofSeconds(31));
+        keys.authenticate(issued.key());
+        assertThat(lastUsed(issued.id())).isAfter(first);
+    }
+
+    @Test
+    void manyAuthenticationsInParallelAllSucceed() throws Exception {
+        ApiKeys.Issued issued = keys.issue(installation, "ci", EnumSet.of(Scope.READ));
+        try (var pool = Executors.newFixedThreadPool(8)) {
+            var futures = new ArrayList<Future<Boolean>>();
+            for (int i = 0; i < 200; i++) {
+                futures.add(pool.submit(() -> keys.authenticate(issued.key()).isPresent()));
+            }
+            for (var future : futures) {
+                assertThat(future.get()).isTrue();
+            }
+        }
     }
 
     @Test
