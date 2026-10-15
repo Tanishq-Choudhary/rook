@@ -115,7 +115,7 @@ Tracing is wired through OpenTelemetry with one span per job step and sampling o
 
 ### Deploying
 
-`deploy/docker/server.Dockerfile` builds the server image and `dashboard/Dockerfile` builds the dashboard. `deploy/compose/stack.yml` starts Postgres, Kafka, the server and the dashboard, and `deploy/compose/observability.yml` adds the monitoring stack. I started the first one, waited for the health check and read the API with the admin key. `deploy/terraform` describes one Docker-capable EC2 host, an RDS Postgres instance, an encrypted work volume and the security groups. It passes `terraform fmt` and `terraform validate`. I have not applied it to an account.
+`deploy/docker/server.Dockerfile` builds the server image and `dashboard/Dockerfile` builds the dashboard. `deploy/compose/stack.yml` starts Postgres, Kafka, the server and the dashboard, and `deploy/compose/observability.yml` adds the monitoring stack. I started the first one, waited for the health check and read the API with the admin key. I also started the monitoring stack and checked that Grafana provisions its three datasources and the dashboard, that Prometheus loads all eleven rules, that Loki receives the logs Alloy ships, and that a span posted to the OTLP port can be read back from Tempo. `deploy/terraform` describes one Docker-capable EC2 host, an RDS Postgres instance, an encrypted work volume and the security groups. It passes `terraform fmt` and `terraform validate`. I have not applied it to an account.
 
 The sandbox needs a Docker socket, which is why the host is an instance and not a Fargate task.
 

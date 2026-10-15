@@ -6,6 +6,12 @@ discovery.relabel "containers" {
   targets = discovery.docker.containers.targets
 
   rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "rook.*"
+    action        = "keep"
+  }
+
+  rule {
     source_labels = ["__meta_docker_container_name"]
     regex         = "/(.*)"
     target_label  = "container"
@@ -26,9 +32,9 @@ loki.source.docker "containers" {
 loki.process "json" {
   stage.json {
     expressions = {
-      level   = "level",
-      trace   = "traceId",
-      logger  = "logger_name",
+      level  = "level",
+      trace  = "traceId",
+      logger = "logger_name",
     }
   }
 
