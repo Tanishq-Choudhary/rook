@@ -236,7 +236,7 @@ Agent-level metrics. Verification and job steps are metered. The agent's token a
 
 Rate limiting per node is fine for one instance. Several instances would need a shared limiter.
 
-The Terraform has never been applied, and the deployment runs Kafka as a single node on the host.
+The Terraform has never been applied, and the deployment runs Kafka as a single node on the host. `.github/workflows/ci.yml` repeats the checks I ran by hand, and has never run, because this repository has no remote.
 
 The dashboard end-to-end tests run against a mock API and not against the real server.
 

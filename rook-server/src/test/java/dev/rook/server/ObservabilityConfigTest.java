@@ -136,6 +136,11 @@ class ObservabilityConfigTest {
     @Test
     void everyProvisionedConfigIsValidYaml() throws IOException {
         YAMLMapper mapper = YAMLMapper.builder().build();
+        try (Stream<Path> files = Files.walk(ROOT.resolve(".github"))) {
+            for (Path file : files.filter(f -> f.toString().endsWith(".yml")).toList()) {
+                assertThat(mapper.readTree(Files.readString(file))).as(file.toString()).isNotNull();
+            }
+        }
         try (Stream<Path> files = Files.walk(ROOT.resolve("deploy"))) {
             for (Path file : files.filter(f -> f.toString().endsWith(".yml")).toList()) {
                 assertThat(mapper.readTree(Files.readString(file))).as(file.toString()).isNotNull();
