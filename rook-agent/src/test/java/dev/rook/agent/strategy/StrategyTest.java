@@ -7,6 +7,7 @@ import static dev.rook.agent.strategy.StrategyFixtures.SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.rook.agent.loop.AgentBudget;
+import dev.rook.agent.loop.AgentTask;
 import dev.rook.agent.loop.SandboxPort;
 import dev.rook.agent.loop.TestRun;
 import dev.rook.agent.model.ModelPrice;
@@ -128,6 +129,30 @@ class StrategyTest {
         assertThat(prompt).contains("<untrusted-content").contains("[REDACTED:github-token]");
         assertThat(prompt).doesNotContain("c".repeat(36));
         assertThat(model.requests().get(0).system()).contains("untrusted-content");
+    }
+
+    private AgentTask withNote(AgentTask task) {
+        return new AgentTask(
+                task.repository(),
+                task.events(),
+                task.report(),
+                task.notes(),
+                task.index(),
+                "SDK API note: PaymentClient.createCharge(long)");
+    }
+
+    @Test
+    void llmOnlyPromptsCarryTheTaskPreface() throws IOException {
+        fixtures(renameOnly(), null);
+        ScriptedModelClient model =
+                ScriptedModelClient.replying(
+                        ScriptedModelClient.text("UNCHANGED"),
+                        ScriptedModelClient.text("UNCHANGED"));
+        llm(model, AgentBudget.standard(), PriceTable.empty())
+                .run(withNote(fixtures.task), fixtures.workspace);
+        assertThat(model.requests().get(0).messages().get(0).text())
+                .startsWith("SDK API note: PaymentClient.createCharge(long)")
+                .contains("Upstream changes:");
     }
 
     @Test
@@ -284,9 +309,10 @@ class StrategyTest {
                                 Map.of("summary", "removed the legacy call", "confidence", 0.8)));
         StrategyOutcome outcome =
                 new HybridStrategy(fixtures.loop(model, sandbox), sandbox)
-                        .run(fixtures.task, fixtures.workspace);
+                        .run(withNote(fixtures.task), fixtures.workspace);
         String firstPrompt = model.requests().get(0).messages().get(0).text();
         assertThat(firstPrompt)
+                .contains("SDK API note: PaymentClient.createCharge(long)")
                 .contains("Automated edits already fixed 2 places")
                 .contains("found 1 affected places across 1 changes");
         assertThat(outcome.status()).isEqualTo("VERIFIED");

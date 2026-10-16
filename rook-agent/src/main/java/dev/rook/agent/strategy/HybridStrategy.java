@@ -119,7 +119,7 @@ public final class HybridStrategy implements Strategy {
                                 left));
             }
         }
-        String preface =
+        String automated =
                 codemods.edits() == 0
                         ? ""
                         : "Automated edits already fixed "
@@ -127,6 +127,12 @@ public final class HybridStrategy implements Strategy {
                                 + " places. Line numbers below refer to the original files and the"
                                 + " workspace already contains those edits. Only the places still"
                                 + " listed need your attention.";
+        String preface =
+                task.preface().isEmpty()
+                        ? automated
+                        : automated.isEmpty()
+                                ? task.preface()
+                                : task.preface() + "\n\n" + automated;
         return new AgentTask(
                 task.repository(),
                 task.events(),

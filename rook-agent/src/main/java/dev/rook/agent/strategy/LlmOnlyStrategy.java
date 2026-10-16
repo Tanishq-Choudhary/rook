@@ -126,7 +126,11 @@ public final class LlmOnlyStrategy implements Strategy {
     }
 
     private String prompt(AgentTask task, Workspace workspace, String file) {
-        StringBuilder text = new StringBuilder("Upstream changes:\n");
+        StringBuilder text = new StringBuilder();
+        if (!task.preface().isEmpty()) {
+            text.append(task.preface()).append("\n\n");
+        }
+        text.append("Upstream changes:\n");
         for (ChangeEvent event : task.events()) {
             text.append("- ").append(event.summary()).append('\n');
         }
