@@ -3,7 +3,11 @@ package dev.rook.agent.model;
 import java.util.Objects;
 import tools.jackson.databind.JsonNode;
 
-public record ToolCall(String id, String name, JsonNode arguments) {
+public record ToolCall(String id, String name, JsonNode arguments, JsonNode extra) {
+
+    public ToolCall(String id, String name, JsonNode arguments) {
+        this(id, name, arguments, null);
+    }
 
     public ToolCall {
         Objects.requireNonNull(id, "id");

@@ -83,6 +83,148 @@ class OpenAiCompatibleClientTest {
     }
 
     @Test
+    void aToolCallWrittenAsJsonTextIsRecognisedWhenTheToolWasOffered() {
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"role":"assistant",
+                  "content":"{\\"name\\": \\"read_file\\", \\"arguments\\": {\\"path\\": \\"a.txt\\"}}"}}],
+                 "usage":{"prompt_tokens":1,"completion_tokens":1}}
+                """);
+        ModelResponse response = client.complete(request());
+        assertThat(response.stopReason()).isEqualTo(StopReason.TOOL_USE);
+        assertThat(response.text()).isEmpty();
+        assertThat(response.toolCalls()).hasSize(1);
+        assertThat(response.toolCalls().get(0).name()).isEqualTo("read_file");
+        assertThat(response.toolCalls().get(0).arguments().path("path").asString())
+                .isEqualTo("a.txt");
+    }
+
+    @Test
+    void providerDataOnAToolCallIsSentBackOnTheNextTurn() {
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"tool_calls","message":{"content":null,
+                  "tool_calls":[{"id":"call_1","type":"function",
+                    "extra_content":{"google":{"thought_signature":"sig-1"}},
+                    "function":{"name":"read_file","arguments":"{\\"path\\":\\"a.txt\\"}"}}]}}],
+                 "usage":{}}
+                """);
+        ModelResponse first = client.complete(request());
+        assertThat(
+                        first.toolCalls()
+                                .get(0)
+                                .extra()
+                                .path("google")
+                                .path("thought_signature")
+                                .asString())
+                .isEqualTo("sig-1");
+
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"content":"done"}}],"usage":{}}
+                """);
+        ModelRequest next =
+                ModelRequest.of(
+                                "You fix code.",
+                                List.of(
+                                        ModelMessage.user("go"),
+                                        ModelMessage.assistant("", first.toolCalls()),
+                                        ModelMessage.toolResult("call_1", "contents")),
+                                128)
+                        .withTools(request().tools());
+        client.complete(next);
+
+        JsonNode sent = Json.tree(api.received().get(1).body()).path("messages");
+        JsonNode call = sent.path(2).path("tool_calls").path(0);
+        assertThat(call.path("extra_content").path("google").path("thought_signature").asString())
+                .isEqualTo("sig-1");
+    }
+
+    @Test
+    void aToolCallWithoutProviderDataSendsNoExtraField() {
+        ModelRequest plain =
+                ModelRequest.of(
+                                "You fix code.",
+                                List.of(
+                                        ModelMessage.user("go"),
+                                        ModelMessage.assistant(
+                                                "",
+                                                List.of(
+                                                        new ToolCall(
+                                                                "c1",
+                                                                "read_file",
+                                                                Json.tree(Map.of("path", "a"))))),
+                                        ModelMessage.toolResult("c1", "x")),
+                                128)
+                        .withTools(request().tools());
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"content":"ok"}}],"usage":{}}
+                """);
+        client.complete(plain);
+
+        JsonNode call =
+                Json.tree(api.received().get(0).body())
+                        .path("messages")
+                        .path(2)
+                        .path("tool_calls")
+                        .path(0);
+        assertThat(call.has("extra_content")).isFalse();
+    }
+
+    @Test
+    void aFencedJsonToolCallIsRecognisedToo() {
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"role":"assistant",
+                  "content":"```json\\n{\\"name\\": \\"read_file\\", \\"arguments\\": {\\"path\\": \\"b.txt\\"}}\\n```"}}],
+                 "usage":{}}
+                """);
+        ModelResponse response = client.complete(request());
+        assertThat(response.toolCalls()).hasSize(1);
+        assertThat(response.toolCalls().get(0).arguments().path("path").asString())
+                .isEqualTo("b.txt");
+    }
+
+    @Test
+    void jsonTextNamingAToolThatWasNotOfferedStaysText() {
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"role":"assistant",
+                  "content":"{\\"name\\": \\"delete_everything\\", \\"arguments\\": {}}"}}],
+                 "usage":{}}
+                """);
+        ModelResponse response = client.complete(request());
+        assertThat(response.toolCalls()).isEmpty();
+        assertThat(response.stopReason()).isEqualTo(StopReason.END_TURN);
+        assertThat(response.text()).contains("delete_everything");
+    }
+
+    @Test
+    void ordinaryTextAndBrokenJsonAreNotToolCalls() {
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"role":"assistant",
+                  "content":"{not json at all}"}}],"usage":{}}
+                """);
+        assertThat(client.complete(request()).toolCalls()).isEmpty();
+        api.reply(
+                200,
+                """
+                {"model":"m","choices":[{"finish_reason":"stop","message":{"role":"assistant",
+                  "content":"I will read the file next."}}],"usage":{}}
+                """);
+        assertThat(client.complete(request()).toolCalls()).isEmpty();
+    }
+
+    @Test
     void brokenToolArgumentsAreRejected() {
         api.reply(
                 200,

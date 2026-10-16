@@ -53,7 +53,7 @@ public final class OpenAiCompatibleClient implements ModelClient {
                         endpoint,
                         Map.of("authorization", "Bearer " + apiKey.value()),
                         Json.write(body(request)));
-        return parse(reply, Duration.ofNanos(System.nanoTime() - started));
+        return parse(reply, Duration.ofNanos(System.nanoTime() - started), request);
     }
 
     ObjectNode body(ModelRequest request) {
@@ -91,6 +91,9 @@ public final class OpenAiCompatibleClient implements ModelClient {
                             ObjectNode function = entry.putObject("function");
                             function.put("name", call.name());
                             function.put("arguments", Json.write(call.arguments()));
+                            if (call.extra() != null) {
+                                entry.set("extra_content", call.extra());
+                            }
                         }
                     }
                 }
@@ -110,7 +113,7 @@ public final class OpenAiCompatibleClient implements ModelClient {
         return body;
     }
 
-    private ModelResponse parse(JsonNode reply, Duration latency) {
+    private ModelResponse parse(JsonNode reply, Duration latency, ModelRequest request) {
         JsonNode choice = reply.path("choices").path(0);
         JsonNode message = choice.path("message");
         if (!message.isObject()) {
@@ -122,20 +125,63 @@ public final class OpenAiCompatibleClient implements ModelClient {
                     new ToolCall(
                             call.path("id").asString(""),
                             call.path("function").path("name").asString(""),
-                            arguments(call.path("function").path("arguments").asString("{}"))));
+                            arguments(call.path("function").path("arguments").asString("{}")),
+                            call.path("extra_content").isObject()
+                                    ? call.path("extra_content")
+                                    : null));
+        }
+        String text = message.path("content").asString("");
+        if (calls.isEmpty()) {
+            ToolCall written = writtenCall(text, request);
+            if (written != null) {
+                calls.add(written);
+                text = "";
+            }
         }
         JsonNode usage = reply.path("usage");
         long input = usage.path("prompt_tokens").asLong(0);
         long cached =
                 Math.min(
                         input, usage.path("prompt_tokens_details").path("cached_tokens").asLong(0));
+        StopReason reason = stop(choice.path("finish_reason").asString(""));
+        if (!calls.isEmpty() && reason == StopReason.END_TURN) {
+            reason = StopReason.TOOL_USE;
+        }
         return new ModelResponse(
-                message.path("content").asString(""),
+                text,
                 calls,
                 new Usage(input, usage.path("completion_tokens").asLong(0), cached),
-                stop(choice.path("finish_reason").asString("")),
+                reason,
                 reply.path("model").asString(model),
                 latency);
+    }
+
+    private static ToolCall writtenCall(String text, ModelRequest request) {
+        String trimmed = text.strip();
+        if (trimmed.startsWith("```")) {
+            int open = trimmed.indexOf('\n');
+            int close = trimmed.lastIndexOf("```");
+            if (open < 0 || close <= open) {
+                return null;
+            }
+            trimmed = trimmed.substring(open + 1, close).strip();
+        }
+        if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+            return null;
+        }
+        JsonNode node;
+        try {
+            node = Json.tree(trimmed);
+        } catch (RuntimeException e) {
+            return null;
+        }
+        String name = node.path("name").asString("");
+        JsonNode arguments = node.path("arguments");
+        boolean offered = request.tools().stream().anyMatch(tool -> tool.name().equals(name));
+        if (!offered || !arguments.isObject()) {
+            return null;
+        }
+        return new ToolCall("written-" + Math.abs(trimmed.hashCode()), name, arguments);
     }
 
     private static JsonNode arguments(String raw) {
