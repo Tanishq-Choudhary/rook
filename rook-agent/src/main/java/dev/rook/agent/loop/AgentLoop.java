@@ -167,7 +167,14 @@ public final class AgentLoop {
             run.toolCalls++;
             long began = System.nanoTime();
             ToolResult result = tools.execute(call, context);
-            trace(run, "tool", call.name(), summary(call.arguments()), began, result.error());
+            trace(
+                    run,
+                    "tool",
+                    call.name(),
+                    summary(call.arguments())
+                            + (result.error() ? " => " + shorten(result.text()) : ""),
+                    began,
+                    result.error());
             listener.toolCalled(call, result);
             if (call.name().equals(FinishTool.NAME) && !result.error()) {
                 Optional<AgentResult> verdict = judgeFinish(run, call, workspace);
@@ -261,6 +268,11 @@ public final class AgentLoop {
         long millis = Duration.ofNanos(System.nanoTime() - beganNanos).toMillis();
         String shortDetail = detail.length() > 300 ? detail.substring(0, 300) : detail;
         run.trace.add(new TraceStep(run.trace.size() + 1, kind, name, shortDetail, millis, error));
+    }
+
+    private static String shorten(String text) {
+        String flat = text.replace('\n', ' ').strip();
+        return flat.length() > 300 ? flat.substring(0, 300) : flat;
     }
 
     private static String summary(JsonNode arguments) {

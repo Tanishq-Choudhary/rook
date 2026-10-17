@@ -22,7 +22,10 @@ final class AgentPrompts {
                     + "5. Run run_tests after your edits. If tests fail, fix the cause shown in the"
                     + " output instead of weakening a test.\n"
                     + "6. When you are done, or stuck, call finish with an honest summary. Put every"
-                    + " place you could not fix in unresolved. Do not claim success you did not verify.\n\n"
+                    + " place you could not fix in unresolved. Do not claim success you did not verify.\n"
+                    + "7. Edit as soon as you know what the new API looks like. The task text may list"
+                    + " the new API. Once run_tests passes after your edits, call finish at once and do"
+                    + " not read files or run the tests again.\n\n"
                     + UntrustedContent.NOTICE;
 
     private AgentPrompts() {}

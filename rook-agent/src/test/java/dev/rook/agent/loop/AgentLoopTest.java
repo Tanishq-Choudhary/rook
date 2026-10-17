@@ -299,6 +299,15 @@ class AgentLoopTest {
                 .contains("$.path is required");
         assertThat(messages.get(4).text()).contains("unknown tool nonexistent");
         assertThat(result.trace()).filteredOn(TraceStep::error).hasSize(2);
+        assertThat(result.trace())
+                .filteredOn(TraceStep::error)
+                .anyMatch(
+                        step ->
+                                step.detail().contains(" => ")
+                                        && step.detail().contains("unknown tool nonexistent"));
+        assertThat(model.requests().get(0).system())
+                .contains("call finish at once")
+                .contains("Edit as soon as you know what the new API looks like");
     }
 
     @Test
