@@ -5,12 +5,14 @@ import dev.rook.agent.strategy.Strategy;
 import dev.rook.agent.strategy.StrategyOutcome;
 import dev.rook.agent.workspace.Workspace;
 import dev.rook.agent.workspace.WorkspacePolicy;
+import dev.rook.changes.jar.ApiSurfaceReader;
 import dev.rook.codeintel.RepoAnalyzer;
 import dev.rook.codeintel.impact.Confidence;
 import dev.rook.codeintel.java.CodeIndex;
 import dev.rook.codeintel.java.JavaIndexer;
 import dev.rook.codeintel.project.RepoProfile;
 import dev.rook.eval.analysis.FixtureAnalysis;
+import dev.rook.eval.analysis.SdkApiNotes;
 import dev.rook.eval.fixture.Fixture;
 import dev.rook.eval.verify.FixtureVerifier;
 import dev.rook.eval.verify.SdkVersion;
@@ -90,7 +92,9 @@ public final class EvalRunner {
                 analysis.analysis().report(),
                 List.of(),
                 index,
-                "");
+                SdkApiNotes.render(
+                        analysis.change().events(),
+                        ApiSurfaceReader.read(analysis.change().afterJar())));
     }
 
     private FixtureResult failed(
