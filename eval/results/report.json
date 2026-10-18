@@ -2,8 +2,75 @@
   "verifier" : "local-maven",
   "minimumConfidence" : "HEURISTIC",
   "fixtures" : 72,
-  "notRun" : [ "llm-only", "agent" ],
+  "notRun" : [ ],
   "strategies" : [ {
+    "strategy" : "agent",
+    "fixtures" : 72,
+    "needingChange" : 56,
+    "noops" : 16,
+    "impactPrecision" : 1.0,
+    "impactRecall" : 1.0,
+    "patchesProduced" : 50,
+    "accepted" : 66,
+    "patchSuccessRate" : 0.8928571428571429,
+    "regressionEscapes" : 0,
+    "noopFixturesEdited" : 0,
+    "protectedFilesEdited" : 0,
+    "totalCostMicros" : 0,
+    "costPerAcceptedMicros" : 0,
+    "latencyP50Millis" : 9659,
+    "latencyP95Millis" : 73909,
+    "categories" : {
+      "argument-removed" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "class-move" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "deprecation-only" : {
+        "total" : 8,
+        "needingChange" : 0,
+        "accepted" : 8
+      },
+      "method-rename" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "name-collision" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "parameter-type-changed" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "return-type-changed" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 2
+      },
+      "string-mention" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "unrelated-update" : {
+        "total" : 8,
+        "needingChange" : 0,
+        "accepted" : 8
+      }
+    },
+    "failures" : {
+      "no patch produced" : 6
+    }
+  }, {
     "strategy" : "codemod-only",
     "fixtures" : 72,
     "needingChange" : 56,
@@ -18,8 +85,8 @@
     "protectedFilesEdited" : 0,
     "totalCostMicros" : 0,
     "costPerAcceptedMicros" : 0,
-    "latencyP50Millis" : 55,
-    "latencyP95Millis" : 506,
+    "latencyP50Millis" : 43,
+    "latencyP95Millis" : 613,
     "categories" : {
       "argument-removed" : {
         "total" : 8,
@@ -70,6 +137,75 @@
     "failures" : {
       "no patch produced" : 16
     }
+  }, {
+    "strategy" : "llm-only",
+    "fixtures" : 72,
+    "needingChange" : 56,
+    "noops" : 16,
+    "impactPrecision" : 1.0,
+    "impactRecall" : 1.0,
+    "patchesProduced" : 60,
+    "accepted" : 67,
+    "patchSuccessRate" : 0.9821428571428571,
+    "regressionEscapes" : 1,
+    "noopFixturesEdited" : 4,
+    "protectedFilesEdited" : 0,
+    "totalCostMicros" : 0,
+    "costPerAcceptedMicros" : 0,
+    "latencyP50Millis" : 5620,
+    "latencyP95Millis" : 11327,
+    "categories" : {
+      "argument-removed" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "class-move" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "deprecation-only" : {
+        "total" : 8,
+        "needingChange" : 0,
+        "accepted" : 4
+      },
+      "method-rename" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "name-collision" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "parameter-type-changed" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "return-type-changed" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 7
+      },
+      "string-mention" : {
+        "total" : 8,
+        "needingChange" : 8,
+        "accepted" : 8
+      },
+      "unrelated-update" : {
+        "total" : 8,
+        "needingChange" : 0,
+        "accepted" : 8
+      }
+    },
+    "failures" : {
+      "does not compile" : 1,
+      "edited files that must stay unchanged" : 3,
+      "independent tests fail" : 1
+    }
   } ],
-  "limitations" : [ "Fixtures are generated from nine change recipes over four invented SDKs. They are small single module Maven projects, not real customer repositories.", "Only Java SDK changes read from compiled jars are covered. OpenAPI changes are not part of this set.", "Verification runs offline Maven on the host with the local process runner. The isolated Docker path is tested separately and is not used for these numbers.", "No model backed strategy was run because no API keys were available. Rows for them are absent on purpose, not zero." ]
+  "limitations" : [ "Fixtures are generated from nine change recipes over four invented SDKs. They are small single module Maven projects, not real customer repositories.", "Only Java SDK changes read from compiled jars are covered. OpenAPI changes are not part of this set.", "Verification runs offline Maven on the host with the local process runner. The isolated Docker path is tested separately and is not used for these numbers.", "The llm-only and agent rows come from one run each of a single model. They say little about other models, and another run can differ. The agent and llm-only prompts include the new SDK API for the types involved." ]
 }

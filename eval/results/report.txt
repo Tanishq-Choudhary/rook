@@ -1,24 +1,50 @@
 fixtures 72, verifier local-maven, impact bar HEURISTIC
 
 strategy       success escapes  noopEdit protEdit  cost/ok    p50 ms    p95 ms
-codemod-only     71.4%       0         0        0        0        55       506
+agent            89.3%       0         0        0        0      9659     73909
+codemod-only     71.4%       0         0        0        0        43       613
+llm-only         98.2%       1         4        0        0      5620     11327
+
+agent: impact precision 1.000, recall 1.000, patches produced 50 of 56
+  name-collision            8 of  8 accepted
+  return-type-changed       2 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          8 of  8 accepted
+  string-mention            8 of  8 accepted
+  parameter-type-changed    8 of  8 accepted
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
+  failure: no patch produced x6
 
 codemod-only: impact precision 1.000, recall 1.000, patches produced 40 of 56
-  parameter-type-changed    0 of  8 accepted
-  string-mention            8 of  8 accepted
-  deprecation-only          8 of  8 accepted
-  argument-removed          8 of  8 accepted
-  method-rename             8 of  8 accepted
-  return-type-changed       0 of  8 accepted
   name-collision            8 of  8 accepted
-  class-move                8 of  8 accepted
+  return-type-changed       0 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          8 of  8 accepted
+  string-mention            8 of  8 accepted
+  parameter-type-changed    0 of  8 accepted
   unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
   failure: no patch produced x16
 
-not run: llm-only, agent
+llm-only: impact precision 1.000, recall 1.000, patches produced 60 of 56
+  name-collision            8 of  8 accepted
+  return-type-changed       7 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          4 of  8 accepted
+  string-mention            8 of  8 accepted
+  parameter-type-changed    8 of  8 accepted
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
+  failure: edited files that must stay unchanged x3
+  failure: independent tests fail x1
+  failure: does not compile x1
 
 limitations
 - Fixtures are generated from nine change recipes over four invented SDKs. They are small single module Maven projects, not real customer repositories.
 - Only Java SDK changes read from compiled jars are covered. OpenAPI changes are not part of this set.
 - Verification runs offline Maven on the host with the local process runner. The isolated Docker path is tested separately and is not used for these numbers.
-- No model backed strategy was run because no API keys were available. Rows for them are absent on purpose, not zero.
+- The llm-only and agent rows come from one run each of a single model. They say little about other models, and another run can differ. The agent and llm-only prompts include the new SDK API for the types involved.
