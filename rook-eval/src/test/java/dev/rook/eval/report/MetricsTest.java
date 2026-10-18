@@ -195,6 +195,15 @@ class MetricsTest {
                 .contains("not run: llm-only")
                 .contains("limitations")
                 .contains("No model backed strategy");
+        EvalReport everyStrategy =
+                EvalReport.build(
+                        "local-maven",
+                        "HEURISTIC",
+                        Map.of("codemod-only", List.of(), "llm-only", List.of()),
+                        List.of());
+        assertThat(Reports.text(everyStrategy))
+                .contains("come from one run each of a single model")
+                .doesNotContain("No model backed strategy");
         assertThat(text)
                 .doesNotContain(String.valueOf((char) 0x2014))
                 .doesNotContain(String.valueOf((char) 0x2013));

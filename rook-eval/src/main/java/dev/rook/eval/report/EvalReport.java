@@ -14,6 +14,11 @@ public record EvalReport(
         List<StrategyMetrics> strategies,
         List<String> limitations) {
 
+    public static final String MODEL_RUN =
+            "The llm-only and agent rows come from one run each of a single model. They say little"
+                    + " about other models, and another run can differ. The agent and llm-only"
+                    + " prompts include the new SDK API for the types involved.";
+
     public static final List<String> LIMITATIONS =
             List.of(
                     "Fixtures are generated from nine change recipes over four invented SDKs. They are small"
@@ -43,6 +48,10 @@ public record EvalReport(
             fixtures = Math.max(fixtures, entry.getValue().size());
             metrics.add(Metrics.of(entry.getKey(), entry.getValue()));
         }
-        return new EvalReport(verifier, minimumConfidence, fixtures, notRun, metrics, LIMITATIONS);
+        List<String> limitations = new ArrayList<>(LIMITATIONS);
+        if (notRun.isEmpty()) {
+            limitations.set(limitations.size() - 1, MODEL_RUN);
+        }
+        return new EvalReport(verifier, minimumConfidence, fixtures, notRun, metrics, limitations);
     }
 }

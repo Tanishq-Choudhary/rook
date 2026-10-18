@@ -23,3 +23,4 @@ dashboard/playwright-report/
 dashboard/tsconfig.tsbuildinfo
 dashboard/.next/
 deploy/terraform/.terraform.lock.hcl
+eval/results/traces/
