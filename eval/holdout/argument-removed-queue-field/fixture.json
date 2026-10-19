@@ -1,0 +1,20 @@
+{
+  "id" : "argument-removed-queue-field",
+  "title" : "QueueClient.publish no longer takes the audit flag",
+  "category" : "argument-removed",
+  "difficulty" : "medium",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_PARAMETERS_CHANGED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 10
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 14
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 20
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "queue", "field", "argument-removed" ]
+}

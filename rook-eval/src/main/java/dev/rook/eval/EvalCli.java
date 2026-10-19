@@ -41,7 +41,7 @@ public final class EvalCli {
     public static int run(String[] args, PrintStream out) {
         if (args.length < 2) {
             out.println(
-                    "usage: generate <directory> | run <fixtures> <results> [filter] | run-model"
+                    "usage: generate <directory> | generate-holdout <directory> | run <fixtures> <results> [filter] | run-model"
                             + " <fixtures> <results> <filter> <base url> <model> <strategies> [gap millis] [iterations]"
                             + " (api key from MODEL_API_KEY)");
             return 2;
@@ -49,6 +49,11 @@ public final class EvalCli {
         try {
             return switch (args[0]) {
                 case "generate" -> generate(Path.of(args[1]), out);
+                case "generate-holdout" -> {
+                    List<Fixture> held = FixtureGenerator.generateHeldOut(Path.of(args[1]));
+                    out.println("generated " + held.size() + " held out fixtures in " + args[1]);
+                    yield 0;
+                }
                 case "run" ->
                         run(
                                 Path.of(args[1]),

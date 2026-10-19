@@ -18,9 +18,17 @@ public final class FixtureGenerator {
     private FixtureGenerator() {}
 
     public static List<Fixture> generate(Path root) {
+        return generate(root, Domain.all());
+    }
+
+    public static List<Fixture> generateHeldOut(Path root) {
+        return generate(root, Domain.heldOut());
+    }
+
+    private static List<Fixture> generate(Path root, List<Domain> domains) {
         List<Fixture> fixtures = new ArrayList<>();
         for (Recipes.Recipe recipe : Recipes.all()) {
-            for (Domain domain : Domain.all()) {
+            for (Domain domain : domains) {
                 for (Style style : Style.values()) {
                     fixtures.add(write(root, recipe, domain, style));
                 }

@@ -1,0 +1,20 @@
+{
+  "id" : "argument-removed-search-local",
+  "title" : "SearchClient.query no longer takes the audit flag",
+  "category" : "argument-removed",
+  "difficulty" : "medium",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_PARAMETERS_CHANGED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "search", "local", "argument-removed" ]
+}

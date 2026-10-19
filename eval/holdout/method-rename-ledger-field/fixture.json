@@ -1,0 +1,20 @@
+{
+  "id" : "method-rename-ledger-field",
+  "title" : "LedgerClient.record is renamed to append",
+  "category" : "method-rename",
+  "difficulty" : "easy",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 10
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 14
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 20
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "ledger", "field", "method-rename" ]
+}

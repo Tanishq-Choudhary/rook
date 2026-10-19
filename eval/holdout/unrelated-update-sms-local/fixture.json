@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-sms-local",
+  "title" : "SmsClient gains listSenders",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "sms", "local", "unrelated-update" ]
+}

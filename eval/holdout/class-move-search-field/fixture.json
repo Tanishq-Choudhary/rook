@@ -1,0 +1,32 @@
+{
+  "id" : "class-move-search-field",
+  "title" : "SearchClient moves to searchlib.client",
+  "category" : "class-move",
+  "difficulty" : "easy",
+  "noop" : false,
+  "changeKinds" : [ "CLASS_MOVED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 3
+  }, {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 7
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 3
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 7
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Wiring.java",
+    "line" : 3
+  }, {
+    "file" : "src/main/java/app/Wiring.java",
+    "line" : 8
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "search", "field", "class-move" ]
+}

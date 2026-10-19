@@ -1,0 +1,20 @@
+{
+  "id" : "method-rename-search-field",
+  "title" : "SearchClient.query is renamed to find",
+  "category" : "method-rename",
+  "difficulty" : "easy",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 10
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 14
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 20
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "search", "field", "method-rename" ]
+}

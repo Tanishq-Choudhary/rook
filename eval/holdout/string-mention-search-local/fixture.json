@@ -1,0 +1,20 @@
+{
+  "id" : "string-mention-search-local",
+  "title" : "SearchClient.query is renamed while strings still mention it",
+  "category" : "string-mention",
+  "difficulty" : "medium",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ "src/main/java/app/Audit.java", "src/main/resources/events.properties" ],
+  "tags" : [ "search", "local", "string-mention" ]
+}

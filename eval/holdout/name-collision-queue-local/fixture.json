@@ -1,0 +1,20 @@
+{
+  "id" : "name-collision-queue-local",
+  "title" : "QueueClient.publish is renamed next to a local publish",
+  "category" : "name-collision",
+  "difficulty" : "medium",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ "src/main/java/app/Ledger.java", "src/main/java/app/Report.java" ],
+  "tags" : [ "queue", "local", "name-collision" ]
+}

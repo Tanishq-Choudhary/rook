@@ -1,0 +1,20 @@
+{
+  "id" : "method-rename-queue-local",
+  "title" : "QueueClient.publish is renamed to enqueue",
+  "category" : "method-rename",
+  "difficulty" : "easy",
+  "noop" : false,
+  "changeKinds" : [ "METHOD_RENAMED" ],
+  "expected" : [ {
+    "file" : "src/main/java/app/Archive.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 9
+  }, {
+    "file" : "src/main/java/app/Service.java",
+    "line" : 16
+  } ],
+  "untouchable" : [ ],
+  "tags" : [ "queue", "local", "method-rename" ]
+}

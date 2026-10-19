@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-ledger-local",
+  "title" : "LedgerClient gains listAccounts",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "ledger", "local", "unrelated-update" ]
+}

@@ -1,0 +1,11 @@
+{
+  "id" : "unrelated-update-search-local",
+  "title" : "SearchClient gains listIndexes",
+  "category" : "unrelated-update",
+  "difficulty" : "easy",
+  "noop" : true,
+  "changeKinds" : [ "METHOD_ADDED" ],
+  "expected" : [ ],
+  "untouchable" : [ ],
+  "tags" : [ "search", "local", "unrelated-update" ]
+}

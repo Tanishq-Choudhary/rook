@@ -35,6 +35,42 @@ public record Domain(
                         "geo", "geokit", "GeoClient", "lookup", "resolve", "found", "listRegions"));
     }
 
+    public static List<Domain> heldOut() {
+        return List.of(
+                new Domain(
+                        "queue",
+                        "queuekit",
+                        "QueueClient",
+                        "publish",
+                        "enqueue",
+                        "queued",
+                        "listTopics"),
+                new Domain(
+                        "search",
+                        "searchlib",
+                        "SearchClient",
+                        "query",
+                        "find",
+                        "matched",
+                        "listIndexes"),
+                new Domain(
+                        "sms",
+                        "smskit",
+                        "SmsClient",
+                        "dispatch",
+                        "transmit",
+                        "dispatched",
+                        "listSenders"),
+                new Domain(
+                        "ledger",
+                        "ledgerkit",
+                        "LedgerClient",
+                        "record",
+                        "append",
+                        "recorded",
+                        "listAccounts"));
+    }
+
     public String qualifiedClient() {
         return pkg + "." + client;
     }

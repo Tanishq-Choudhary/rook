@@ -58,7 +58,10 @@ public final class FixtureSandbox implements SandboxPort {
             }
             executed++;
             if (test.broken()) {
-                failures.add(test.id());
+                failures.add(
+                        test.message() == null || test.message().isEmpty()
+                                ? test.id()
+                                : test.id() + ": " + test.message());
             }
         }
         return new TestRun(

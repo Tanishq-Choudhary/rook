@@ -105,7 +105,7 @@ class FixtureSandboxTest {
 
         assertThat(tests.executed()).isEqualTo(2);
         assertThat(tests.failed()).isEqualTo(1);
-        assertThat(tests.failures()).containsExactly("app.AppTest#two");
+        assertThat(tests.failures()).containsExactly("app.AppTest#two: boom");
         assertThat(tests.passed()).isFalse();
     }
 
