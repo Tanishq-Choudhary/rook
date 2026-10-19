@@ -10,16 +10,16 @@
     "noops" : 16,
     "impactPrecision" : 1.0,
     "impactRecall" : 1.0,
-    "patchesProduced" : 50,
-    "accepted" : 66,
-    "patchSuccessRate" : 0.8928571428571429,
+    "patchesProduced" : 56,
+    "accepted" : 72,
+    "patchSuccessRate" : 1.0,
     "regressionEscapes" : 0,
     "noopFixturesEdited" : 0,
     "protectedFilesEdited" : 0,
     "totalCostMicros" : 0,
     "costPerAcceptedMicros" : 0,
-    "latencyP50Millis" : 9659,
-    "latencyP95Millis" : 73909,
+    "latencyP50Millis" : 7864,
+    "latencyP95Millis" : 102789,
     "categories" : {
       "argument-removed" : {
         "total" : 8,
@@ -54,7 +54,7 @@
       "return-type-changed" : {
         "total" : 8,
         "needingChange" : 8,
-        "accepted" : 2
+        "accepted" : 8
       },
       "string-mention" : {
         "total" : 8,
@@ -67,9 +67,7 @@
         "accepted" : 8
       }
     },
-    "failures" : {
-      "no patch produced" : 6
-    }
+    "failures" : { }
   }, {
     "strategy" : "codemod-only",
     "fixtures" : 72,
@@ -85,8 +83,8 @@
     "protectedFilesEdited" : 0,
     "totalCostMicros" : 0,
     "costPerAcceptedMicros" : 0,
-    "latencyP50Millis" : 43,
-    "latencyP95Millis" : 613,
+    "latencyP50Millis" : 302,
+    "latencyP95Millis" : 1032,
     "categories" : {
       "argument-removed" : {
         "total" : 8,
@@ -152,8 +150,8 @@
     "protectedFilesEdited" : 0,
     "totalCostMicros" : 0,
     "costPerAcceptedMicros" : 0,
-    "latencyP50Millis" : 5620,
-    "latencyP95Millis" : 11327,
+    "latencyP50Millis" : 5891,
+    "latencyP95Millis" : 16079,
     "categories" : {
       "argument-removed" : {
         "total" : 8,
@@ -202,8 +200,7 @@
       }
     },
     "failures" : {
-      "does not compile" : 1,
-      "edited files that must stay unchanged" : 3,
+      "edited files that must stay unchanged" : 4,
       "independent tests fail" : 1
     }
   } ],

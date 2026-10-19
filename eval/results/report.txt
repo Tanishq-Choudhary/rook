@@ -1,47 +1,45 @@
 fixtures 72, verifier local-maven, impact bar HEURISTIC
 
 strategy       success escapes  noopEdit protEdit  cost/ok    p50 ms    p95 ms
-agent            89.3%       0         0        0        0      9659     73909
-codemod-only     71.4%       0         0        0        0        43       613
-llm-only         98.2%       1         4        0        0      5620     11327
+agent           100.0%       0         0        0        0      7864    102789
+codemod-only     71.4%       0         0        0        0       302      1032
+llm-only         98.2%       1         4        0        0      5891     16079
 
-agent: impact precision 1.000, recall 1.000, patches produced 50 of 56
-  name-collision            8 of  8 accepted
-  return-type-changed       2 of  8 accepted
-  method-rename             8 of  8 accepted
-  argument-removed          8 of  8 accepted
-  deprecation-only          8 of  8 accepted
+agent: impact precision 1.000, recall 1.000, patches produced 56 of 56
   string-mention            8 of  8 accepted
   parameter-type-changed    8 of  8 accepted
   unrelated-update          8 of  8 accepted
   class-move                8 of  8 accepted
-  failure: no patch produced x6
+  name-collision            8 of  8 accepted
+  return-type-changed       8 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          8 of  8 accepted
 
 codemod-only: impact precision 1.000, recall 1.000, patches produced 40 of 56
+  string-mention            8 of  8 accepted
+  parameter-type-changed    0 of  8 accepted
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
   name-collision            8 of  8 accepted
   return-type-changed       0 of  8 accepted
   method-rename             8 of  8 accepted
   argument-removed          8 of  8 accepted
   deprecation-only          8 of  8 accepted
-  string-mention            8 of  8 accepted
-  parameter-type-changed    0 of  8 accepted
-  unrelated-update          8 of  8 accepted
-  class-move                8 of  8 accepted
   failure: no patch produced x16
 
 llm-only: impact precision 1.000, recall 1.000, patches produced 60 of 56
+  string-mention            8 of  8 accepted
+  parameter-type-changed    8 of  8 accepted
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
   name-collision            8 of  8 accepted
   return-type-changed       7 of  8 accepted
   method-rename             8 of  8 accepted
   argument-removed          8 of  8 accepted
   deprecation-only          4 of  8 accepted
-  string-mention            8 of  8 accepted
-  parameter-type-changed    8 of  8 accepted
-  unrelated-update          8 of  8 accepted
-  class-move                8 of  8 accepted
-  failure: edited files that must stay unchanged x3
   failure: independent tests fail x1
-  failure: does not compile x1
+  failure: edited files that must stay unchanged x4
 
 limitations
 - Fixtures are generated from nine change recipes over four invented SDKs. They are small single module Maven projects, not real customer repositories.

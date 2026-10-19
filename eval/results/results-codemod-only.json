@@ -16,7 +16,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 56,
+  "latencyMillis" : 445,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -38,7 +38,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 43,
+  "latencyMillis" : 534,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -60,7 +60,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 92,
+  "latencyMillis" : 329,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -82,7 +82,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 104,
+  "latencyMillis" : 612,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -104,7 +104,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 96,
+  "latencyMillis" : 708,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -126,7 +126,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 201,
+  "latencyMillis" : 585,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -148,7 +148,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 43,
+  "latencyMillis" : 404,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -170,7 +170,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 58,
+  "latencyMillis" : 139,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -192,7 +192,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 318,
+  "latencyMillis" : 472,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -214,7 +214,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 75,
+  "latencyMillis" : 860,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -236,7 +236,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 74,
+  "latencyMillis" : 875,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -258,7 +258,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 75,
+  "latencyMillis" : 387,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -280,7 +280,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 321,
+  "latencyMillis" : 465,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -302,7 +302,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 102,
+  "latencyMillis" : 302,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -324,7 +324,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 109,
+  "latencyMillis" : 1509,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -346,7 +346,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 55,
+  "latencyMillis" : 704,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -544,7 +544,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 620,
+  "latencyMillis" : 633,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -566,7 +566,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 626,
+  "latencyMillis" : 642,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -588,7 +588,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 619,
+  "latencyMillis" : 736,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -610,7 +610,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 49,
+  "latencyMillis" : 509,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -632,7 +632,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 50,
+  "latencyMillis" : 1032,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -654,7 +654,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 42,
+  "latencyMillis" : 532,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -676,7 +676,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 613,
+  "latencyMillis" : 656,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -698,7 +698,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 71,
+  "latencyMillis" : 447,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -720,7 +720,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 121,
+  "latencyMillis" : 276,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -742,7 +742,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 43,
+  "latencyMillis" : 990,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -764,7 +764,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 55,
+  "latencyMillis" : 400,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -786,7 +786,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 488,
+  "latencyMillis" : 500,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -808,7 +808,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 48,
+  "latencyMillis" : 474,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -830,7 +830,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 57,
+  "latencyMillis" : 1015,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -852,7 +852,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 64,
+  "latencyMillis" : 925,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -874,7 +874,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 63,
+  "latencyMillis" : 1236,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1094,7 +1094,7 @@
   "regressionEscape" : false,
   "accepted" : false,
   "costMicros" : 0,
-  "latencyMillis" : 1,
+  "latencyMillis" : 0,
   "status" : "PARTIAL",
   "unresolved" : [ "src/main/java/app/Archive.java:9 METHOD_CALL", "src/main/java/app/Service.java:9 METHOD_CALL", "src/main/java/app/Service.java:16 METHOD_CALL" ],
   "failure" : "no patch produced"
@@ -1116,7 +1116,7 @@
   "regressionEscape" : false,
   "accepted" : false,
   "costMicros" : 0,
-  "latencyMillis" : 0,
+  "latencyMillis" : 17,
   "status" : "PARTIAL",
   "unresolved" : [ "src/main/java/app/Archive.java:10 METHOD_CALL", "src/main/java/app/Service.java:14 METHOD_CALL", "src/main/java/app/Service.java:20 METHOD_CALL" ],
   "failure" : "no patch produced"
@@ -1138,7 +1138,7 @@
   "regressionEscape" : false,
   "accepted" : false,
   "costMicros" : 0,
-  "latencyMillis" : 0,
+  "latencyMillis" : 19,
   "status" : "PARTIAL",
   "unresolved" : [ "src/main/java/app/Archive.java:9 METHOD_CALL", "src/main/java/app/Service.java:9 METHOD_CALL", "src/main/java/app/Service.java:16 METHOD_CALL" ],
   "failure" : "no patch produced"
@@ -1248,7 +1248,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 63,
+  "latencyMillis" : 1000,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1270,7 +1270,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 157,
+  "latencyMillis" : 922,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1292,7 +1292,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 43,
+  "latencyMillis" : 1299,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1314,7 +1314,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 77,
+  "latencyMillis" : 826,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1336,7 +1336,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 58,
+  "latencyMillis" : 418,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1358,7 +1358,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 76,
+  "latencyMillis" : 240,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1380,7 +1380,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 587,
+  "latencyMillis" : 485,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1402,7 +1402,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 55,
+  "latencyMillis" : 438,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1512,7 +1512,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 0,
+  "latencyMillis" : 1,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""
@@ -1578,7 +1578,7 @@
   "regressionEscape" : false,
   "accepted" : true,
   "costMicros" : 0,
-  "latencyMillis" : 36,
+  "latencyMillis" : 62,
   "status" : "COMPLETE",
   "unresolved" : [ ],
   "failure" : ""

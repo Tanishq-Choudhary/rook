@@ -1,0 +1,48 @@
+fixtures 72, verifier local-maven, impact bar HEURISTIC
+
+strategy       success escapes  noopEdit protEdit  cost/ok    p50 ms    p95 ms
+agent           100.0%       0         0        0        0      9332    113434
+codemod-only     71.4%       0         0        0        0       380      1363
+llm-only         98.2%       0         1        0        0      5895     10372
+
+agent: impact precision 1.000, recall 1.000, patches produced 56 of 56
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
+  name-collision            8 of  8 accepted
+  return-type-changed       8 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          8 of  8 accepted
+  string-mention            8 of  8 accepted
+  parameter-type-changed    8 of  8 accepted
+
+codemod-only: impact precision 1.000, recall 1.000, patches produced 40 of 56
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
+  name-collision            8 of  8 accepted
+  return-type-changed       0 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          8 of  8 accepted
+  string-mention            8 of  8 accepted
+  parameter-type-changed    0 of  8 accepted
+  failure: no patch produced x16
+
+llm-only: impact precision 1.000, recall 1.000, patches produced 57 of 56
+  unrelated-update          8 of  8 accepted
+  class-move                8 of  8 accepted
+  name-collision            8 of  8 accepted
+  return-type-changed       7 of  8 accepted
+  method-rename             8 of  8 accepted
+  argument-removed          8 of  8 accepted
+  deprecation-only          7 of  8 accepted
+  string-mention            8 of  8 accepted
+  parameter-type-changed    8 of  8 accepted
+  failure: visible tests fail x1
+  failure: edited files that must stay unchanged x1
+
+limitations
+- Fixtures are generated from nine change recipes over four invented SDKs. They are small single module Maven projects, not real customer repositories.
+- Only Java SDK changes read from compiled jars are covered. OpenAPI changes are not part of this set.
+- Verification runs offline Maven on the host with the local process runner. The isolated Docker path is tested separately and is not used for these numbers.
+- The llm-only and agent rows come from one run each of a single model. They say little about other models, and another run can differ. The agent and llm-only prompts include the new SDK API for the types involved.

@@ -10,7 +10,7 @@ Everything here runs locally. Nothing in this repository is deployed anywhere, a
 |---|---|
 | Evaluation set | 72 generated fixtures, 56 of which need a change |
 | Codemods only | 40 of 56 fixed, 71.4% |
-| Codemods plus the agent (Gemini 3.5 Flash Lite) | 50 of 56 fixed, 89.3%, 0 escaped regressions |
+| Codemods plus the agent (Gemini 3.5 Flash Lite) | 56 of 56 fixed, 100%, 0 escaped regressions, on the main set and on a held-out set |
 | Listing jobs, 32 concurrent clients | 3,879 requests a second, p99 27.4 ms |
 | Before the API key fix | 801 requests a second, p99 133.9 ms |
 | Signed webhook intake, 32 concurrent clients | 2,845 deliveries a second, p99 27.0 ms |
@@ -20,7 +20,7 @@ Everything here runs locally. Nothing in this repository is deployed anywhere, a
 - A poller reads OpenAPI documents, release feeds and Maven artifacts and turns each new version into a typed change set: a method renamed, a class moved, an argument removed, an enum value gone.
 - A change set fans out to every repository that watches that source. Each (change set, repository) pair becomes one durable job.
 - Impact analysis reads the repository with a real symbol solver and says where the change lands, with a confidence on every location.
-- Deterministic codemods write the patch first. A bounded model loop handles what the codemods leave over. On the evaluation fixtures it lifts the codemods from 71.4% to 89.3% with Gemini 3.5 Flash Lite, and a small local model added nothing. The results section has the numbers.
+- Deterministic codemods write the patch first. A bounded model loop handles what the codemods leave over. With Gemini 3.5 Flash Lite it lifts the codemods from 71.4% to 100% on the evaluation fixtures, and it held that on a second set it was never tuned on. A small local model added nothing. The results section has the numbers.
 - The patch is built and tested twice in a Docker sandbox, once on the base and once patched, and eleven gates decide whether it counts as verified.
 - A policy decides: allow, ask for approval, or deny. Every decision lands in a hash-chained audit log.
 - The pull request carries the impact, the diff, the verification result and the policy decision.
@@ -203,6 +203,11 @@ Cause: its reply carries a `thought_signature` on each tool call, and the API re
 Fix: tool calls keep an opaque provider field, and the client reads it from replies and writes it back.
 Result: multi-turn tool use works against the Gemini endpoint.
 
+The agent explored and never edited.
+Cause: on the return type fixtures it read the files and then spent all 16 iterations on symbol searches without an edit, or edited at the very end and ran out of turns. When its tests failed it saw only the names of the failing tests, so it guessed, for example `.toString()` on the new return type instead of `.id()`.
+Fix: after six read-only tool calls with no edit, every tool result carries a reminder to edit now, and a failing test run now reports each failure's message with its name. The prompt also says to call `finish` as soon as the tests pass.
+Result: the return type fixtures went from 2 of 8 to 8 of 8, and the agent fixed 56 of 56 on the main set and 56 of 56 on the held-out set. Tracing is saved per fixture now, which is how I found this.
+
 Still open: `successiveChangeSetsOfOneRepositoryFinishInDetectionOrder` failed twice in about twenty runs, with two neighbouring jobs of one repository finishing swapped. Sends are synchronous and idempotent, the unique index blocks overtaking and retries keep the job state, so I could not find the cause and could not reproduce it in the last sixteen runs. The integration tests are allowed one rerun, and I would rather have the explanation.
 
 ## Measured results
@@ -211,25 +216,35 @@ The machine is a Windows laptop with 16 logical processors and Docker Desktop. T
 
 ### Evaluation lab
 
-72 generated fixtures: nine kinds of change, four invented SDKs, two usage styles. Each is a small Maven project with tests the strategy never sees. Verification runs offline Maven on the host, not in Docker. The model rows ran `gemini-3.5-flash-lite` on the free tier through its OpenAI-compatible endpoint, one fixture at a time at about 13 requests a minute, with a budget of 16 iterations and 2 repair rounds per fixture.
+Two sets of 72 generated fixtures. Each has nine kinds of change, four invented SDKs and two usage styles, and each fixture is a small Maven project with tests the strategy never sees. The main set is the one I built the agent against. The held-out set uses four different SDKs (queue, search, sms and ledger clients with different class and method names), and I ran it once, after the agent was finished. Verification runs offline Maven on the host, not in Docker. The model rows ran `gemini-3.5-flash-lite` on the free tier through its OpenAI-compatible endpoint, one fixture at a time at about 13 requests a minute, with a budget of 16 iterations and 2 repair rounds per fixture.
+
+![Fixtures fixed by each strategy on the main and the held-out set: 71.4% for codemods only, 100% for the agent, 98.2% for llm-only](docs/rook-eval-results.svg)
+
+Main set:
 
 | Strategy | Patched and verified | Escaped regressions | Edits that should not happen | Median time |
 | --- | --- | --- | --- | --- |
-| codemod-only | 40 of 56 (71.4%) | 0 | 0 | 43 ms |
-| agent | 50 of 56 (89.3%) | 0 | 0 | 9.7 s |
-| llm-only | 55 of 56 (98.2%) | 1 | 4 | 5.6 s |
+| codemod-only | 40 of 56 (71.4%) | 0 | 0 | 0.3 s |
+| agent | 56 of 56 (100%) | 0 | 0 | 7.9 s |
+| llm-only | 55 of 56 (98.2%) | 1 | 4 | 5.9 s |
 
-The 56 are the fixtures that need a change. The other 16 need none and should be left untouched.
+Held-out set:
 
-The agent gains all of its 10 fixtures on the two kinds the codemods cannot handle. It fixed 8 of 8 parameter type changes and 2 of 8 return type changes. The 6 return type fixtures it missed ended at the iteration limit without a patch. Everything the codemods already fixed it still fixes, and it makes no model call for those.
+| Strategy | Patched and verified | Escaped regressions | Edits that should not happen | Median time |
+| --- | --- | --- | --- | --- |
+| codemod-only | 40 of 56 (71.4%) | 0 | 0 | 0.4 s |
+| agent | 56 of 56 (100%) | 0 | 0 | 9.3 s |
+| llm-only | 55 of 56 (98.2%) | 0 | 1 | 5.9 s |
 
-![Fixtures fixed by each strategy: 71.4% for codemods only, 89.3% for the agent, 98.2% for llm-only](docs/rook-eval-results.svg)
+The 56 are the fixtures that need a change. The other 16 need none and should be left untouched, and the agent left all of them alone on both sets. Raw rows are in `eval/results` and `eval/results/holdout`.
 
-`llm-only` has the highest raw score and the worst safety record. It edited files that had to stay unchanged on 4 of the 8 deprecation-only fixtures, and on one return type fixture the visible tests passed while the independent ones failed. The agent had neither problem on this set, and I do not count `llm-only` as better on the strength of the first column alone.
+The codemods cannot do parameter type or return type changes, which is the 16 fixtures they miss on each set. The agent fixes all of them, and for everything the codemods already fix it makes no model call.
 
-Tokens, from the run: the agent called the model on 24 fixtures (the 16 type changes and the 8 deprecation-only ones, where it checks whether anything needs doing) with 301 calls, 735k input tokens and 10k output tokens, so roughly 30k input per fixture that used it. `llm-only` made 132 calls with 47k input and 14k output. At Gemini 3.5 Flash-Lite's paid prices of $0.30 and $2.50 per million tokens that run would cost about 30 cents. It cost nothing on the free tier, whose limits allowed this in one day.
+`llm-only` is close on the raw score and worse on safety. On the main set it edited files that had to stay unchanged on 4 of the 8 deprecation-only fixtures, and on one return type fixture the visible tests passed while the independent ones failed. On the held-out set it made one such edit and failed one fixture's visible tests. It never runs the tests, so it cannot tell when it is wrong.
 
-One run each, on synthetic fixtures written by the same person who wrote the codemods, with one model. The run to run spread of a model is real: an earlier local model run changed several cells between two attempts. The agent also has the new SDK API in its prompt, which the codemods do not need, so the comparison is between tools given what each needs.
+Tokens, from the runs: on the main set the agent called the model on 24 fixtures (the 16 type changes and the 8 deprecation-only ones, where it checks whether anything needs doing) with 238 calls, 519k input tokens and 11k output tokens. `llm-only` made 132 calls with 47k input and 14k output. The held-out set used 220 calls with 469k input and 11k output for the agent and 132 calls with 47k input and 13k output for `llm-only`. At Gemini 3.5 Flash-Lite's paid prices of $0.30 and $2.50 per million tokens each set would cost about 23 cents for both strategies. It cost nothing on the free tier.
+
+What this does not show: both sets come from the same nine kinds of change, so the held-out set tests new names and not new kinds. The fixtures are small, single module and written by the same person who wrote the codemods. Each number is one run with one model, and an earlier agent run on the same fixtures scored 89.3% before two loop fixes, so the spread is real. With the agent at 100% on both sets the fixtures no longer separate strategies, and harder ones are the next thing to add.
 
 ### Load
 
@@ -257,9 +272,9 @@ The last full `mvn verify` ran 1,029 unit tests and 364 integration tests across
 
 The intermittent ordering failure, first.
 
-Codemods for parameter and return type changes, which account for all 16 unpatched fixtures.
+Codemods for parameter and return type changes, which would let the cheapest strategy cover the 16 fixtures it misses.
 
-Why the agent runs to its iteration limit. On the six return type fixtures it never calls `finish`, and on two of the eight it applied a correct patch and still used all 16 iterations. I have not looked at the traces yet. The Anthropic client is tested against a local fake and has never called the real service.
+Harder fixtures. The agent scores 100% on both sets, so they no longer separate strategies. A new required parameter whose value comes from context, a method split in two, or a change in meaning with the same signature would. The Anthropic client is tested against a local fake and has never called the real service.
 
 A pipeline test that goes through the Docker verifier. The verifier has its own integration tests, but the end-to-end flow test uses a stub verifier, because getting an SDK jar into an offline sandbox cache inside that test was more work than I had left.
 
