@@ -24,6 +24,8 @@ import tools.jackson.databind.JsonNode;
 public final class AgentLoop {
 
     private static final int MAX_OUTPUT_TOKENS = 4_096;
+    private static final int EXPLORE_LIMIT = 6;
+    private static final String EDIT_TOOL = "apply_edit";
 
     private final ModelClient model;
     private final PriceTable prices;
@@ -61,6 +63,8 @@ public final class AgentLoop {
         int iterations;
         int repairRounds;
         int toolCalls;
+        int exploring;
+        boolean edited;
         String rejection = "";
     }
 
@@ -184,7 +188,19 @@ public final class AgentLoop {
                 run.messages.add(ModelMessage.toolResult(call.id(), run.rejection));
                 continue;
             }
-            run.messages.add(ModelMessage.toolResult(call.id(), result.text()));
+            String text = result.text();
+            if (call.name().equals(EDIT_TOOL) && !result.error()) {
+                run.edited = true;
+                run.exploring = 0;
+            } else if (!run.edited
+                    && !call.name().equals(RunTestsTool.NAME)
+                    && !call.name().equals(FinishTool.NAME)) {
+                run.exploring++;
+            }
+            if (!run.edited && run.exploring >= EXPLORE_LIMIT) {
+                text = text + "\n\n" + AgentPrompts.explorationReminder(run.exploring);
+            }
+            run.messages.add(ModelMessage.toolResult(call.id(), text));
         }
         return Optional.empty();
     }

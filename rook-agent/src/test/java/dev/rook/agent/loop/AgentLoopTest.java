@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.rook.agent.model.ModelMessage;
 import dev.rook.agent.model.ModelPrice;
+import dev.rook.agent.model.ModelRequest;
 import dev.rook.agent.model.ModelResponse;
 import dev.rook.agent.model.PriceTable;
 import dev.rook.agent.model.ScriptedModelClient;
@@ -275,6 +276,47 @@ class AgentLoopTest {
         assertThat(result.status()).isEqualTo(AgentResult.Status.MODEL_FAILED);
         assertThat(result.summary()).contains("no more replies");
         assertThat(result.trace()).anyMatch(TraceStep::error);
+    }
+
+    @Test
+    void longExplorationWithoutAnEditGetsAReminderOnEveryLaterResult() throws IOException {
+        ScriptedModelClient model =
+                ScriptedModelClient.replying(
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        finish(0.5));
+        run(model);
+        List<ModelRequest> requests = model.requests();
+        String fifth = requests.get(5).messages().get(10).text();
+        String sixth = requests.get(6).messages().get(12).text();
+        String seventh = requests.get(7).messages().get(14).text();
+        assertThat(fifth).doesNotContain("Reminder:");
+        assertThat(sixth).contains("Reminder: 6 read-only tool calls and no edit yet");
+        assertThat(seventh).contains("Reminder: 7 read-only tool calls and no edit yet");
+    }
+
+    @Test
+    void anAppliedEditStopsTheReminders() throws IOException {
+        ScriptedModelClient model =
+                ScriptedModelClient.replying(
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        edit(),
+                        call("read_file", Map.of("path", SERVICE_PATH)),
+                        finish(0.5));
+        run(model);
+        List<ModelRequest> requests = model.requests();
+        assertThat(requests.get(8).messages().get(16).text()).doesNotContain("Reminder:");
+        assertThat(requests.get(7).messages().get(14).text()).doesNotContain("Reminder:");
     }
 
     @Test

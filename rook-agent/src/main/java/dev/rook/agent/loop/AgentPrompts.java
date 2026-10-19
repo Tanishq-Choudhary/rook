@@ -56,6 +56,14 @@ final class AgentPrompts {
         return text.toString();
     }
 
+    static String explorationReminder(int calls) {
+        return "Reminder: "
+                + calls
+                + " read-only tool calls and no edit yet. You have what you need. Apply the edit"
+                + " for each affected place now and then run run_tests. If you cannot work out"
+                + " the change, call finish and list what is unresolved.";
+    }
+
     static String testFailure(int round, int limit, String description) {
         return "finish was not accepted because verification failed (repair round "
                 + round
