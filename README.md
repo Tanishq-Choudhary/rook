@@ -6,10 +6,21 @@ Everything here runs locally. Nothing in this repository is deployed anywhere, a
 
 ## The short version
 
+| | |
+|---|---|
+| Evaluation set | 72 generated fixtures, 56 of which need a change |
+| Codemods only | 40 of 56 fixed, 71.4% |
+| Codemods plus the agent (Gemini 3.5 Flash Lite) | 50 of 56 fixed, 89.3%, 0 escaped regressions |
+| Listing jobs, 32 concurrent clients | 3,879 requests a second, p99 27.4 ms |
+| Before the API key fix | 801 requests a second, p99 133.9 ms |
+| Signed webhook intake, 32 concurrent clients | 2,845 deliveries a second, p99 27.0 ms |
+| Tests | over 1,000 unit and 360 integration, plus the dashboard's unit and browser tests |
+| Stack | Java 21, Spring Boot 4, PostgreSQL 16, Kafka, Next.js, Docker |
+
 - A poller reads OpenAPI documents, release feeds and Maven artifacts and turns each new version into a typed change set: a method renamed, a class moved, an argument removed, an enum value gone.
 - A change set fans out to every repository that watches that source. Each (change set, repository) pair becomes one durable job.
 - Impact analysis reads the repository with a real symbol solver and says where the change lands, with a confidence on every location.
-- Deterministic codemods write the patch first. A bounded model loop is only meant for what the codemods leave over. I had no model keys while building this, so every number below is from codemods alone.
+- Deterministic codemods write the patch first. A bounded model loop handles what the codemods leave over. On the evaluation fixtures it lifts the codemods from 71.4% to 89.3% with Gemini 3.5 Flash Lite, and a small local model added nothing. The results section has the numbers.
 - The patch is built and tested twice in a Docker sandbox, once on the base and once patched, and eleven gates decide whether it counts as verified.
 - A policy decides: allow, ask for approval, or deny. Every decision lands in a hash-chained audit log.
 - The pull request carries the impact, the diff, the verification result and the policy decision.
@@ -26,18 +37,9 @@ The first version of the pipeline passed its tests and still would not start ins
 
 ### How a change travels
 
-```
-source poll ──> change set + outbox row (one transaction)
-                      │
-                outbox relay (single leader) ──> Kafka
-                                                   │
-                                    fan-out consumer (dedupes by message id)
-                                                   │
-                                 one job per (change set, repository)
-                                                   │
-        PENDING → INDEXING → PROPOSING → VERIFYING → AWAITING_APPROVAL → PUBLISHING → COMPLETED
-                       terminal: NO_IMPACT, REJECTED, FAILED, DEAD, SUPERSEDED, CANCELLED
-```
+![Rook architecture: pollers, PostgreSQL, the outbox relay, Kafka, fan-out, workers moving a job through five steps, and what each step relies on](docs/rook-architecture.svg)
+
+![Job states from PENDING through VERIFYING and PUBLISHING to COMPLETED, with approval as a branch and the terminal states below](docs/rook-job-states.svg)
 
 Postgres is the source of truth for job state. Kafka only carries change sets from the poller to the fan-out, and jobs are never claimed from Kafka.
 
@@ -88,6 +90,8 @@ The model loop is bounded by iterations, tokens, cost, wall clock and tool calls
 Every sandbox run is a Docker container with no network, a read-only root, a tmpfs for scratch space, all capabilities dropped, `no-new-privileges`, a non-root user, memory without swap, CPU and pid limits, and a unique name with labels so a reaper can remove leftovers. The first run for a repository warms the dependency cache with the network on. Every later run is offline with the cache mounted read only, and the build happens in a size-limited tmpfs copy of the source. A hostile build can neither poison the cache nor fill the host disk.
 
 Baseline and patched results are compared test by test. Flaky failures are rerun and excluded. The gates are deterministic and any gate that cannot be evaluated fails: a non-empty patch, it compiles, tests actually ran, no new confirmed failures, no removed or newly skipped tests, tests not weakened, size limits, allowed paths, protected files, no added dependencies and no secrets in added lines.
+
+![Baseline and patched runs in the sandbox, compared test by test, then the gates and the verdict](docs/rook-verification.svg)
 
 ### Deciding what may ship
 
@@ -184,6 +188,21 @@ Cause: I had turned off token storage in JavaParser to save memory, and ranges c
 Fix: tokens stay on.
 Result: locations carry real positions and snippets.
 
+The agent did nothing with the local model.
+Cause: `qwen2.5-coder:7b` through Ollama writes its tool call as JSON text in the message instead of the structured `tool_calls` field. The loop saw a reply with no tool call and stopped after a second.
+Fix: the OpenAI-compatible client now accepts a reply that is only a JSON object naming a tool that was offered in the request, bare or inside a code fence. A name that was not offered stays plain text.
+Result: the agent started calling tools. It still ended without an edit on every type-change fixture, which led to the next incident.
+
+The agent could not know what to change.
+Cause: the evaluation gave it no migration notes, and the repository does not contain the SDK, so for a parameter type change nothing told it that the new type was `Ref` or that `Ref` is built from a `String`. No model could have solved those 16 fixtures. Two smaller faults hid this: the hybrid strategy replaced the task preface with its own text, and the llm-only strategy never sent the preface at all.
+Fix: the evaluation now renders the new SDK API for the types involved in each change, from the jar surface Rook already extracts, and both strategies send it.
+Result: with the notes and Gemini 3.5 Flash Lite the agent fixed 10 of those 16. I changed the model and the prompt together, so I cannot say how much each contributed.
+
+Gemini 3 rejected the second turn of every tool conversation.
+Cause: its reply carries a `thought_signature` on each tool call, and the API returns a 400 if the next request does not send it back. The client dropped fields it did not know.
+Fix: tool calls keep an opaque provider field, and the client reads it from replies and writes it back.
+Result: multi-turn tool use works against the Gemini endpoint.
+
 Still open: `successiveChangeSetsOfOneRepositoryFinishInDetectionOrder` failed twice in about twenty runs, with two neighbouring jobs of one repository finishing swapped. Sends are synchronous and idempotent, the unique index blocks overtaking and retries keep the job state, so I could not find the cause and could not reproduce it in the last sixteen runs. The integration tests are allowed one rerun, and I would rather have the explanation.
 
 ## Measured results
@@ -192,15 +211,25 @@ The machine is a Windows laptop with 16 logical processors and Docker Desktop. T
 
 ### Evaluation lab
 
-72 generated fixtures: nine kinds of change, four invented SDKs, two usage styles. Each is a small Maven project with tests the strategy never sees. Verification runs offline Maven on the host, not in Docker.
+72 generated fixtures: nine kinds of change, four invented SDKs, two usage styles. Each is a small Maven project with tests the strategy never sees. Verification runs offline Maven on the host, not in Docker. The model rows ran `gemini-3.5-flash-lite` on the free tier through its OpenAI-compatible endpoint, one fixture at a time at about 13 requests a minute, with a budget of 16 iterations and 2 repair rounds per fixture.
 
 | Strategy | Patched and verified | Escaped regressions | Edits that should not happen | Median time |
 | --- | --- | --- | --- | --- |
-| codemod-only | 40 of 56 (71.4%) | 0 | 0 | 55 ms |
+| codemod-only | 40 of 56 (71.4%) | 0 | 0 | 43 ms |
+| agent | 50 of 56 (89.3%) | 0 | 0 | 9.7 s |
+| llm-only | 55 of 56 (98.2%) | 1 | 4 | 5.6 s |
 
-The 56 are the fixtures that need a change. Eight each of method rename, class move, argument removed, name collision and string mention were fixed. Parameter type changes and return type changes produced no patch, because I did not write codemods for them. The 16 fixtures that need no change were left untouched. Impact precision and recall are both 1.000 on this set.
+The 56 are the fixtures that need a change. The other 16 need none and should be left untouched.
 
-These fixtures are synthetic. They are small, single module and written by the same person who wrote the codemods, so the score says the pipeline works as designed and does not say how it would do on real repositories. The rows for `llm-only` and `agent` are absent on purpose. I had no model keys, and an absent row is not a zero.
+The agent gains all of its 10 fixtures on the two kinds the codemods cannot handle. It fixed 8 of 8 parameter type changes and 2 of 8 return type changes. The 6 return type fixtures it missed ended at the iteration limit without a patch. Everything the codemods already fixed it still fixes, and it makes no model call for those.
+
+![Fixtures fixed by each strategy: 71.4% for codemods only, 89.3% for the agent, 98.2% for llm-only](docs/rook-eval-results.svg)
+
+`llm-only` has the highest raw score and the worst safety record. It edited files that had to stay unchanged on 4 of the 8 deprecation-only fixtures, and on one return type fixture the visible tests passed while the independent ones failed. The agent had neither problem on this set, and I do not count `llm-only` as better on the strength of the first column alone.
+
+Tokens, from the run: the agent called the model on 24 fixtures (the 16 type changes and the 8 deprecation-only ones, where it checks whether anything needs doing) with 301 calls, 735k input tokens and 10k output tokens, so roughly 30k input per fixture that used it. `llm-only` made 132 calls with 47k input and 14k output. At Gemini 3.5 Flash-Lite's paid prices of $0.30 and $2.50 per million tokens that run would cost about 30 cents. It cost nothing on the free tier, whose limits allowed this in one day.
+
+One run each, on synthetic fixtures written by the same person who wrote the codemods, with one model. The run to run spread of a model is real: an earlier local model run changed several cells between two attempts. The agent also has the new SDK API in its prompt, which the codemods do not need, so the comparison is between tools given what each needs.
 
 ### Load
 
@@ -211,6 +240,8 @@ Thirty-two concurrent clients for twenty seconds after a five second warm-up. Ra
 | List jobs, before the key fix | 801.4 | 32.4 ms | 92.1 ms | 133.9 ms | 0 |
 | List jobs | 3,879.1 | 6.9 ms | 17.3 ms | 27.4 ms | 0 |
 | Signed webhook delivery | 2,845.4 | 9.9 ms | 19.7 ms | 27.0 ms | 0 |
+
+![Listing jobs before and after the API key fix: 801 to 3,879 requests a second, p99 133.9 to 27.4 ms](docs/rook-load-results.svg)
 
 With the default limits (a burst of 60 and 10 requests per second per key), 158 of 9,563 requests in ten seconds were accepted and the rest got `429`. That is the limiter working, and the rows above ran with the limits raised.
 
@@ -228,7 +259,7 @@ The intermittent ordering failure, first.
 
 Codemods for parameter and return type changes, which account for all 16 unpatched fixtures.
 
-A real model-backed run, so the table has more than one row. The clients for Anthropic and OpenAI-compatible endpoints exist and are tested against a local fake, but nothing here has called a real model.
+Why the agent runs to its iteration limit. On the six return type fixtures it never calls `finish`, and on two of the eight it applied a correct patch and still used all 16 iterations. I have not looked at the traces yet. The Anthropic client is tested against a local fake and has never called the real service.
 
 A pipeline test that goes through the Docker verifier. The verifier has its own integration tests, but the end-to-end flow test uses a stub verifier, because getting an SDK jar into an offline sandbox cache inside that test was more work than I had left.
 
@@ -278,4 +309,24 @@ npx playwright test
 
 runs the dashboard unit tests and the browser tests, which start the application against a small mock API and use the Chrome installed on the machine.
 
+```
+MODEL_API_KEY=<key> java dev.rook.eval.EvalCli run-model eval/fixtures eval/results - https://generativelanguage.googleapis.com/v1beta/openai gemini-3.5-flash-lite agent,llm-only 4500
+```
+
+reruns the codemod baseline and the model strategies against any OpenAI-compatible endpoint, one fixture at a time. The fourth argument filters fixture names, and `-` matches all of them. The last argument is the pause between model calls in milliseconds, for rate limits. A fixture whose model call fails after retries stops the run and keeps the finished fixtures, and running the same command again continues from there. The key is read from `MODEL_API_KEY` and is never written to a file. For a local model use `http://localhost:11434/v1` with Ollama and no key.
+
 The load generator is `dev.rook.loadtest.LoadCli`, with `--scenario api-read` or `--scenario webhook`. The API contract is in `docs/openapi.yaml` and a test fails when the controllers and the document disagree.
+
+## API
+
+The contract is `docs/openapi.yaml`, and a test fails when the controllers and the document disagree. Everything under `/api/v1` needs a bearer key with a read, write or admin scope.
+
+`GET /api/v1/jobs` lists jobs with a state filter, and `GET /api/v1/jobs/{id}` returns the whole story of one: its timeline, the impact, the proposal, the verification result, the policy decision, the approval and the pull request.
+
+`POST /api/v1/jobs/{id}/approve`, `reject`, `cancel` and `retry` act on a job. Approving a job that has no pending approval returns a conflict, so a second approval of the same job is refused.
+
+`GET /api/v1/events` streams job events as server sent events and resumes from `Last-Event-ID`.
+
+`GET /api/v1/change-sets`, `/repositories`, `/sources`, `/usage`, `/policies/effective` and `/audit` read the rest of the state, and `GET /api/v1/audit/verify` checks the hash chain. `PUT /api/v1/policies` and `PUT /api/v1/budgets` change them.
+
+`POST /webhooks/github` takes GitHub deliveries. It checks the HMAC signature and records the delivery id before handling anything.
