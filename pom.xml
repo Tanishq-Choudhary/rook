@@ -49,7 +49,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <spring-boot.version>4.1.1</spring-boot.version>
     <jqwik.version>1.10.2</jqwik.version>
-    <asm.version>9.11</asm.version>
+    <asm.version>9.11.1</asm.version>
     <javaparser.version>3.28.2</javaparser.version>
     <jgit.version>7.8.0.202609011348-r</jgit.version>
     <jacoco.line.minimum>0.70</jacoco.line.minimum>
