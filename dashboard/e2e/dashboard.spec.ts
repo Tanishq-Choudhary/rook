@@ -109,7 +109,9 @@ test("the evaluation page shows the committed results", async ({ page }) => {
   await page.goto("/evaluation");
   const table = page.getByRole("table", { name: "Strategy results" });
   await expect(table.getByRole("row", { name: /codemod-only/ })).toContainText("71.4%");
-  await expect(page.getByText(/Not run: llm-only, agent/)).toBeVisible();
+  await expect(table.getByRole("row", { name: /agent/ })).toContainText(/100(\.0)?%/);
+  await expect(table.getByRole("row", { name: /llm-only/ })).toContainText("98.2%");
+  await expect(page.getByText(/Not run:/)).toHaveCount(0);
 });
 
 test("signing out drops the session", async ({ page }) => {
