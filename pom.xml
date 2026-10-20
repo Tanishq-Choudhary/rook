@@ -9,6 +9,21 @@
   <version>0.1.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>rook</name>
+  <description>Detects breaking changes in third party APIs and SDKs, traces their impact on repositories, and proposes verified migrations.</description>
+
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/licenses/MIT</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Tanishq Choudhary</name>
+    </developer>
+  </developers>
 
   <modules>
     <module>rook-core</module>
