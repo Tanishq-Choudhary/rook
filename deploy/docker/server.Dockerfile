@@ -17,7 +17,7 @@ COPY rook-server/pom.xml rook-server/pom.xml
 COPY . .
 RUN mvn -B -q -pl rook-server -am -DskipTests -DskipITs -Dspotless.check.skip=true -Djacoco.skip=true package
 
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 RUN apk add --no-cache docker-cli tini \
     && addgroup -S rook && adduser -S rook -G rook
 WORKDIR /app
