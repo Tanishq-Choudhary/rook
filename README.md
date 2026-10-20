@@ -266,7 +266,7 @@ With the default limits (a burst of 60 and 10 requests per second per key), 158 
 
 ### Tests
 
-The last full `mvn verify` ran 1,029 unit tests and 364 integration tests across the Java modules, with a 70 percent line coverage gate per module. Four tests skip themselves through assumptions. I ran it in two parts: the first stopped at the ordering failure above, and the second started at that module with one rerun allowed and passed without needing it. The dashboard adds 66 unit tests and 13 browser tests, and the observability files are covered by a test that cross-checks metric names against the code.
+The last full `mvn verify` ran 1,067 unit tests and 364 integration tests across the Java modules in one pass, with no failures and no reruns, and a 70 percent line coverage gate per module. Four tests skip themselves through assumptions. The dashboard adds 66 unit tests and 13 browser tests, and the observability files are covered by a test that cross-checks metric names against the code.
 
 ## What I would fix next
 
@@ -345,3 +345,7 @@ The contract is `docs/openapi.yaml`, and a test fails when the controllers and t
 `GET /api/v1/change-sets`, `/repositories`, `/sources`, `/usage`, `/policies/effective` and `/audit` read the rest of the state, and `GET /api/v1/audit/verify` checks the hash chain. `PUT /api/v1/policies` and `PUT /api/v1/budgets` change them.
 
 `POST /webhooks/github` takes GitHub deliveries. It checks the HMAC signature and records the delivery id before handling anything.
+
+## License
+
+MIT. See `LICENSE`.
