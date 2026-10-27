@@ -47,7 +47,7 @@
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <spring-boot.version>4.1.1</spring-boot.version>
+    <spring-boot.version>4.1.2</spring-boot.version>
     <jqwik.version>1.10.2</jqwik.version>
     <asm.version>9.11</asm.version>
     <javaparser.version>3.28.2</javaparser.version>
