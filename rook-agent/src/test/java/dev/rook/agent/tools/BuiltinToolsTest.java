@@ -13,10 +13,13 @@ import dev.rook.core.change.ChangeEvent;
 import dev.rook.core.change.ChangeKind;
 import dev.rook.core.change.MigrationNote;
 import dev.rook.core.change.SymbolRef;
+import dev.rook.core.error.ErrorCode;
+import dev.rook.core.error.RookException;
 import dev.rook.core.json.Json;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
@@ -27,6 +30,10 @@ import org.junit.jupiter.api.io.TempDir;
 class BuiltinToolsTest {
 
     @TempDir Path temp;
+
+    private final List<String> searches = new ArrayList<>();
+    private List<ReferenceSearch.Passage> library = List.of();
+    private RuntimeException searchFailure;
 
     private ToolRegistry registry;
     private ToolContext context;
@@ -88,7 +95,16 @@ class BuiltinToolsTest {
                 .register(new ListImpactedTool())
                 .register(new SearchSymbolTool())
                 .register(new FindReferencesTool())
-                .register(new ReadMigrationNotesTool());
+                .register(new ReadMigrationNotesTool())
+                .register(
+                        new SearchReferenceTool(
+                                (query, limit) -> {
+                                    searches.add(query + " " + limit);
+                                    if (searchFailure != null) {
+                                        throw searchFailure;
+                                    }
+                                    return library;
+                                }));
     }
 
     @AfterEach
@@ -246,5 +262,45 @@ class BuiltinToolsTest {
                         List.of(),
                         context.sanitizer());
         assertThat(run("list_impacted", Map.of()).text()).contains("no affected locations");
+    }
+
+    @Test
+    void referenceSearchShowsEachPassageWithFileAndLine() {
+        library =
+                List.of(
+                        new ReferenceSearch.Passage(
+                                "acme/pay/PaymentClient.java",
+                                5,
+                                "public Receipt createCharge(long cents) {"),
+                        new ReferenceSearch.Passage(
+                                "acme/pay/Receipt.java", 3, "public record Receipt(String id) {}"));
+        ToolResult result = run("search_reference", Map.of("query", "createCharge"));
+        assertThat(result.error()).isFalse();
+        assertThat(result.text())
+                .startsWith("<untrusted-content id=")
+                .contains("## acme/pay/PaymentClient.java:5")
+                .contains("public Receipt createCharge(long cents) {")
+                .contains("## acme/pay/Receipt.java:3");
+        assertThat(searches).containsExactly("createCharge 5");
+    }
+
+    @Test
+    void referenceSearchWithNoMatchSaysSo() {
+        assertThat(run("search_reference", Map.of("query", "Ledger")).text())
+                .isEqualTo("nothing in the library source matches Ledger");
+    }
+
+    @Test
+    void referenceSearchFailureComesBackAsAnError() {
+        searchFailure = new RookException(ErrorCode.UNAVAILABLE, "search node is down");
+        ToolResult result = run("search_reference", Map.of("query", "Receipt"));
+        assertThat(result.error()).isTrue();
+        assertThat(result.text()).isEqualTo("search node is down");
+    }
+
+    @Test
+    void referenceSearchNeedsAQuery() {
+        assertThat(run("search_reference", Map.of("query", "")).error()).isTrue();
+        assertThat(searches).isEmpty();
     }
 }
