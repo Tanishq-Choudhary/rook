@@ -13,6 +13,7 @@ import dev.rook.eval.run.EvalRunner;
 import dev.rook.eval.run.FixtureResult;
 import dev.rook.eval.run.ModelStrategies;
 import dev.rook.eval.run.PartialResults;
+import dev.rook.eval.run.XerjReferences;
 import dev.rook.eval.verify.FixtureSandbox;
 import dev.rook.eval.verify.LocalMavenVerifier;
 import dev.rook.verify.sandbox.LocalProcessRunner;
@@ -43,7 +44,7 @@ public final class EvalCli {
             out.println(
                     "usage: generate <directory> | generate-holdout <directory> | run <fixtures> <results> [filter] | run-model"
                             + " <fixtures> <results> <filter> <base url> <model> <strategies> [gap millis] [iterations]"
-                            + " (api key from MODEL_API_KEY)");
+                            + " (api key from MODEL_API_KEY, agent-search reads XERJ_BIN and XERJ_URL)");
             return 2;
         }
         try {
@@ -80,6 +81,19 @@ public final class EvalCli {
             out.println("failed: " + e.getMessage());
             return 1;
         }
+    }
+
+    private static String xerjBinary() {
+        String binary = System.getenv("XERJ_BIN");
+        if (binary == null || binary.isBlank()) {
+            throw new IllegalStateException("agent-search needs XERJ_BIN set to the xerj binary");
+        }
+        return binary;
+    }
+
+    private static String xerjUrl() {
+        String url = System.getenv("XERJ_URL");
+        return url == null || url.isBlank() ? "http://localhost:9200" : url;
     }
 
     private static int generate(Path directory, PrintStream out) {
@@ -176,22 +190,33 @@ public final class EvalCli {
             for (String name : wanted) {
                 List<FixtureResult> rows = new java.util.ArrayList<>();
                 for (Fixture fixture : selected) {
-                    Strategy strategy =
-                            name.equals("agent")
-                                    ? models.agent(
-                                            new FixtureSandbox(
-                                                    fixture,
-                                                    runner,
-                                                    scratch.resolve("agent"),
-                                                    timeout))
-                                    : models.llmOnly();
                     FixtureResult row = partial.load(name, fixture.id()).orElse(null);
                     if (row != null) {
                         out.println(name + " " + fixture.id() + " resumed");
                         rows.add(row);
                         continue;
                     }
-                    row = evaluation.run(fixture, strategy);
+                    FixtureSandbox sandbox =
+                            new FixtureSandbox(fixture, runner, scratch.resolve("agent"), timeout);
+                    Strategy strategy =
+                            switch (name) {
+                                case "agent" -> models.agent(sandbox);
+                                case "agent-bare" -> models.agent(name, sandbox);
+                                case "agent-search" ->
+                                        models.agent(
+                                                name,
+                                                sandbox,
+                                                XerjReferences.index(
+                                                        runner,
+                                                        xerjBinary(),
+                                                        xerjUrl(),
+                                                        fixture.id(),
+                                                        fixture.sdkAfter(),
+                                                        timeout));
+                                default -> models.llmOnly();
+                            };
+                    boolean apiNotes = name.equals("agent") || name.equals("llm-only");
+                    row = evaluation.run(fixture, strategy, apiNotes);
                     long[] usage = models.takeUsage();
                     String failure = models.takeFailure();
                     if (failure != null) {

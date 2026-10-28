@@ -21,6 +21,8 @@ import dev.rook.agent.tools.FindReferencesTool;
 import dev.rook.agent.tools.ListImpactedTool;
 import dev.rook.agent.tools.ReadFileTool;
 import dev.rook.agent.tools.ReadMigrationNotesTool;
+import dev.rook.agent.tools.ReferenceSearch;
+import dev.rook.agent.tools.SearchReferenceTool;
 import dev.rook.agent.tools.SearchSymbolTool;
 import dev.rook.agent.tools.ToolRegistry;
 import dev.rook.core.random.SharedRandom;
@@ -85,16 +87,32 @@ public final class ModelStrategies {
     }
 
     public Strategy agent(SandboxPort sandbox) {
-        ToolRegistry registry =
-                new ToolRegistry(ToolRegistry.Limits.standard(), ToolRegistry.Listener.NOOP)
-                        .register(new ReadFileTool())
-                        .register(new ApplyEditTool())
-                        .register(new ListImpactedTool())
-                        .register(new SearchSymbolTool())
-                        .register(new FindReferencesTool())
-                        .register(new ReadMigrationNotesTool())
-                        .register(new RunTestsTool(sandbox, AgentListener.NONE))
-                        .register(new FinishTool());
+        return new TracingStrategy(hybrid(sandbox, tools(sandbox)), traces);
+    }
+
+    public Strategy agent(String name, SandboxPort sandbox) {
+        return new TracingStrategy(
+                new NamedStrategy(name, hybrid(sandbox, tools(sandbox))), traces);
+    }
+
+    public Strategy agent(String name, SandboxPort sandbox, ReferenceSearch references) {
+        ToolRegistry registry = tools(sandbox).register(new SearchReferenceTool(references));
+        return new TracingStrategy(new NamedStrategy(name, hybrid(sandbox, registry)), traces);
+    }
+
+    private static ToolRegistry tools(SandboxPort sandbox) {
+        return new ToolRegistry(ToolRegistry.Limits.standard(), ToolRegistry.Listener.NOOP)
+                .register(new ReadFileTool())
+                .register(new ApplyEditTool())
+                .register(new ListImpactedTool())
+                .register(new SearchSymbolTool())
+                .register(new FindReferencesTool())
+                .register(new ReadMigrationNotesTool())
+                .register(new RunTestsTool(sandbox, AgentListener.NONE))
+                .register(new FinishTool());
+    }
+
+    private Strategy hybrid(SandboxPort sandbox, ToolRegistry registry) {
         AgentLoop loop =
                 new AgentLoop(
                         model,
@@ -105,6 +123,6 @@ public final class ModelStrategies {
                         budget,
                         PromptSanitizer.standard(PROMPT_CHARS),
                         AgentListener.NONE);
-        return new TracingStrategy(new HybridStrategy(loop, sandbox), traces);
+        return new HybridStrategy(loop, sandbox);
     }
 }
