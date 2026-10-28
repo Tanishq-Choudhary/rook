@@ -205,4 +205,33 @@ class EvalRunnerTest {
         assertThat(result.accepted()).isFalse();
         assertThat(result.patchProduced()).isFalse();
     }
+
+    @Test
+    void theNewSdkApiCanBeLeftOutOfTheTask() {
+        Fixture typeChange =
+                fixtures.stream()
+                        .filter(f -> f.id().equals("parameter-type-changed-blob-field"))
+                        .findFirst()
+                        .orElseThrow();
+        Map<String, String> prefaces = new ConcurrentHashMap<>();
+        runner.run(typeChange, recording("with-notes", prefaces), true);
+        runner.run(typeChange, recording("without-notes", prefaces), false);
+        assertThat(prefaces.get("with-notes")).contains("Ref");
+        assertThat(prefaces.get("without-notes")).isEmpty();
+    }
+
+    private static Strategy recording(String name, Map<String, String> prefaces) {
+        return new Strategy() {
+            @Override
+            public String name() {
+                return name;
+            }
+
+            @Override
+            public StrategyOutcome run(AgentTask task, Workspace workspace) {
+                prefaces.put(name, task.preface());
+                return new CodemodOnlyStrategy().run(task, workspace);
+            }
+        };
+    }
 }

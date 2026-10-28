@@ -38,12 +38,16 @@ public final class EvalRunner {
     }
 
     public FixtureResult run(Fixture fixture, Strategy strategy) {
+        return run(fixture, strategy, true);
+    }
+
+    public FixtureResult run(Fixture fixture, Strategy strategy, boolean apiNotes) {
         Path base = work.resolve(fixture.id()).resolve(strategy.name());
         FixtureAnalysis analysis = FixtureAnalysis.run(fixture, base.resolve("sdk"), minimum);
         StrategyOutcome outcome;
         Workspace workspace = Workspace.copyOf(fixture.repo(), base.resolve("workspace"), policy);
         try {
-            outcome = strategy.run(task(fixture, workspace, analysis), workspace);
+            outcome = strategy.run(task(fixture, workspace, analysis, apiNotes), workspace);
         } catch (RuntimeException e) {
             return failed(fixture, strategy, analysis, "strategy failed: " + e.getMessage());
         }
@@ -81,20 +85,25 @@ public final class EvalRunner {
                 failure(verdict, falseEdits, mustChange));
     }
 
-    private AgentTask task(Fixture fixture, Workspace workspace, FixtureAnalysis analysis) {
+    private AgentTask task(
+            Fixture fixture, Workspace workspace, FixtureAnalysis analysis, boolean apiNotes) {
         RepoProfile profile = RepoProfile.detect(workspace.root());
         List<String> roots = new ArrayList<>(profile.mainRoots());
         roots.addAll(profile.testRoots());
         CodeIndex index = JavaIndexer.index(workspace.root(), roots);
+        String preface =
+                apiNotes
+                        ? SdkApiNotes.render(
+                                analysis.change().events(),
+                                ApiSurfaceReader.read(analysis.change().afterJar()))
+                        : "";
         return new AgentTask(
                 fixture.id(),
                 analysis.change().events(),
                 analysis.analysis().report(),
                 List.of(),
                 index,
-                SdkApiNotes.render(
-                        analysis.change().events(),
-                        ApiSurfaceReader.read(analysis.change().afterJar())));
+                preface);
     }
 
     private FixtureResult failed(
