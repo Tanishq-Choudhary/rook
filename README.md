@@ -278,6 +278,8 @@ Harder fixtures. The agent scores 100% on both sets, so they no longer separate 
 
 A pipeline test that goes through the Docker verifier. The verifier has its own integration tests, but the end-to-end flow test uses a stub verifier, because getting an SDK jar into an offline sandbox cache inside that test was more work than I had left.
 
+Results for the search arms. `agent-bare` and `agent-search` are built and tested, but I have not run them against a model yet, so there are no numbers for them here. On fixtures this small any search finds the right file, so they show whether the agent uses the tool well more than how good the ranking is.
+
 Agent-level metrics. Verification and job steps are metered. The agent's token and cost figures only reach the usage ledger, not Prometheus.
 
 Rate limiting per node is fine for one instance. Several instances would need a shared limiter.
@@ -329,6 +331,8 @@ MODEL_API_KEY=<key> java dev.rook.eval.EvalCli run-model eval/fixtures eval/resu
 ```
 
 reruns the codemod baseline and the model strategies against any OpenAI-compatible endpoint, one fixture at a time. The fourth argument filters fixture names, and `-` matches all of them. The last argument is the pause between model calls in milliseconds, for rate limits. A fixture whose model call fails after retries stops the run and keeps the finished fixtures, and running the same command again continues from there. The key is read from `MODEL_API_KEY` and is never written to a file. For a local model use `http://localhost:11434/v1` with Ollama and no key.
+
+Two more strategy names test whether a general code search can replace the rendered SDK API. `agent-bare` is the agent without that preface. `agent-search` also leaves it out and gives the agent a `search_reference` tool over the new SDK source, served by a local [XERJ](https://github.com/xerj-org/xerj) node. Before each fixture the source is indexed under its own prefix with `xerj autoindex`, and every search goes through `xerj search --json`. Set `XERJ_BIN` to the binary, and `XERJ_URL` when the node is not on `http://localhost:9200`. I run the node with `XERJ_DISABLE_FEEDBACK=true`. `XerjReferencesIT` checks the indexing and search against a real node and skips itself when `XERJ_BIN` is not set.
 
 The load generator is `dev.rook.loadtest.LoadCli`, with `--scenario api-read` or `--scenario webhook`. The API contract is in `docs/openapi.yaml` and a test fails when the controllers and the document disagree.
 
